@@ -5,7 +5,11 @@ namespace App\Models\Concerns;
 use App\Support\HashidsCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @mixin Model
+ */
 trait HasHashidsCode
 {
     public function initializeHasHashidsCode(): void
@@ -13,13 +17,19 @@ trait HasHashidsCode
         $this->append('hashids_code');
     }
 
-    public function resolveRouteBinding($value, $field = null)
+    /**
+     * @param int|string $value
+     * @param string|null $field
+     */
+    public function resolveRouteBinding($value, $field = null): ?Model
     {
-        if ($field !== null || ctype_digit((string) $value)) {
-            return parent::resolveRouteBinding($value, $field);
+        $routeKey = (string) $value;
+
+        if ($field !== null || ctype_digit($routeKey)) {
+            return $this->resolveRouteBindingQuery($this, $value, $field)->first();
         }
 
-        return static::findByHashidsCode((string) $value);
+        return static::findByHashidsCode($routeKey);
     }
 
     public function scopeWhereHashidsCode(Builder $query, string $code): Builder
@@ -29,19 +39,26 @@ trait HasHashidsCode
         return $query->whereKey($id ?? 0);
     }
 
-    public static function findByHashidsCode(string $code): ?static
+    /**
+     * @return static|null
+     */
+    public static function findByHashidsCode(string $code): ?Model
     {
         $id = HashidsCode::decode($code, static::class);
 
-        return $id === null ? null : static::query()->find($id);
+        if (!$id) {
+            return null;
+        }
+
+        return static::query()->find($id);
     }
 
     protected function hashidsCode(): Attribute
     {
         return Attribute::get(
-            fn (): ?string => $this->getKey() === null
+            fn (): ?string => !$this->getKey()
                 ? null
-                : HashidsCode::encode((int) $this->getKey(), static::class)
+                : HashidsCode::encode($this->getKey(), static::class)
         );
     }
 }
