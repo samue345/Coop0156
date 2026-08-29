@@ -8,7 +8,7 @@
         <div>
             <p class="mb-2 text-sm font-medium text-emerald-400">Crédito contratado</p>
             <h1 class="text-3xl font-semibold text-white">Contratações</h1>
-            <p class="mt-2 text-sm text-slate-400">Acompanhe os créditos aprovados que foram contratados.</p>
+            <p class="mt-2 text-sm text-slate-400">Acompanhe os créditos enviados para contratação e os já contratados.</p>
         </div>
         <a href="{{ url('/') }}" class="inline-flex h-10 items-center justify-center rounded-lg bg-emerald-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
             Nova análise
@@ -31,11 +31,12 @@
                         <th class="px-5 py-3">Cliente</th>
                         <th class="px-5 py-3">CPF</th>
                         <th class="px-5 py-3">Tipo</th>
-                        <th class="px-5 py-3">Valor contratado</th>
+                        <th class="px-5 py-3">Valor solicitado</th>
                         <th class="px-5 py-3">Parcela</th>
                         <th class="px-5 py-3">Total</th>
                         <th class="px-5 py-3">Taxa</th>
-                        <th class="px-5 py-3">Contratado em</th>
+                        <th class="px-5 py-3">Status</th>
+                        <th class="px-5 py-3">Atualizado em</th>
                         <th class="px-5 py-3 text-right">Ações</th>
                     </tr>
                 </thead>
@@ -59,6 +60,11 @@
                                 R$ {{ number_format($contract->valor_parcela * 12, 2, ',', '.') }}
                             </td>
                             <td class="px-5 py-4 text-slate-300">{{ number_format($contract->taxa_juros, 1, ',', '.') }}% a.m.</td>
+                            <td class="px-5 py-4">
+                                <span class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold {{ $contract->status === \App\Enums\AnalysisStatus::CONTRACTED ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-blue-500/20 bg-blue-500/10 text-blue-400' }}">
+                                    {{ $contract->status === \App\Enums\AnalysisStatus::CONTRACTED ? 'Contratado' : 'Processando' }}
+                                </span>
+                            </td>
                             <td class="px-5 py-4 text-slate-400">{{ $contract->updated_at->format('d/m/Y H:i') }}</td>
                             <td class="px-5 py-4 text-right">
                                 <a href="{{ url('/simulacao/' . $contract->hashids_code) }}" class="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
@@ -68,7 +74,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="10" class="px-5 py-12 text-center text-slate-500">
+                            <td colspan="11" class="px-5 py-12 text-center text-slate-500">
                                 Nenhuma contratação encontrada.
                             </td>
                         </tr>
