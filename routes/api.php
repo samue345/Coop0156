@@ -10,7 +10,8 @@ Route::apiResource('clientes', CustomerController::class)
     ->parameters(['clientes' => 'customer']);
 
 // --- Análise de Crédito ---
-Route::post('/analise-credito', [CreditAnalysisController::class, 'requestAnalysis']);
+Route::post('/analise-credito', [CreditAnalysisController::class, 'requestAnalysis'])
+    ->middleware('throttle:credit-analysis');
 Route::post('/analise-credito/{creditAnalysis}/contratar', [CreditAnalysisController::class, 'contract']);
 
 // --- Endpoint de Mock (Bureau de Crédito externo simulado — não alterar) ---

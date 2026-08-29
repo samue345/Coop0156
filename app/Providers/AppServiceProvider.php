@@ -14,6 +14,9 @@ use App\Repositories\EloquentCustomerRepository;
 use App\Repositories\CreditAnalysisRepositoryInterface;
 use App\Repositories\EloquentCreditAnalysisRepository;
 use App\Integrations\CreditBureauClient;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -43,6 +46,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        RateLimiter::for('credit-analysis', function (Request $request) {
+            return Limit::perMinute(10)->by($request->ip());
+        });
     }
 }
