@@ -2,44 +2,51 @@
 
 namespace App\Jobs;
 
+use App\Enums\AnalysisStatus;
+use App\Models\CreditAnalysis;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
-/**
- * ⭐ DIFERENCIAL OPCIONAL — ProcessContractingJob
- *
- * Este Job é um diferencial do desafio. Sua implementação NÃO é obrigatória,
- * mas demonstra conhecimento em processamento assíncrono com Laravel Queues.
- *
- * Para utilizá-lo:
- *  - No método `contratar` do CreditAnalysisController, em vez de atualizar o
- *    status diretamente para 'contratado', atualize para 'processando_contratacao'
- *    e dispare este Job: ProcessContractingJob::dispatch($analysisId);
- *  - Configure a fila no .env: QUEUE_CONNECTION=database
- *  - Execute o worker: php artisan queue:work
- */
+
 class ProcessContractingJob implements ShouldQueue
 {
     use InteractsWithQueue, Queueable, SerializesModels;
 
-    /**
-     * Create a new job instance.
-     */
-    public function __construct(public int $analysisId)
+    public function __construct(public CreditAnalysis $analysis)
     {
-        //
     }
 
-    /**
-     * Execute the job.
-     *
-     * TODO (Diferencial): Buscar a CreditAnalysis pelo $analysisId,
-     * atualizar o status para 'contratado' e registrar um log de sucesso.
-     */
     public function handle(): void
     {
-        //
+        if ($this->analysis->status !== AnalysisStatus::PROCESSING_CONTRACT) {
+            Log::info('Credit contracting job skipped because analysis is not processing.', [
+                'analysis_id' => $this->analysis->getKey(),
+                'status' => $this->analysis->status?->value,
+            ]);
+
+            return;
+        }
+
+        $this->analysis->update(['status' => AnalysisStatus::CONTRACTED]);
+
+        Log::info('Credit contracting completed.', [
+            'analysis_id' => $this->analysis->getKey(),
+        ]);
+    }
+
+    public function failed(Throwable $exception): void
+    {
+        $this->analysis->update([
+            'status' => AnalysisStatus::APPROVED,
+        ]);
+
+        Log::error('Credit contracting failed.', [
+            'analysis_id' => $this->analysis->getKey(),
+            'message' => $exception->getMessage(),
+        ]);
     }
 }
