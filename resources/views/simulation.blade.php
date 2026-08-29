@@ -4,24 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simulação de Crédito — Coop0156</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Outfit', 'sans-serif'] },
-                    colors: {
-                        darkBg: '#0b0f19',
-                        panelBg: '#131c2e',
-                        panelBorder: '#1e2d4a',
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {
             background-color: #0b0f19;
@@ -64,6 +47,7 @@
         @php
             $valorTotal = $analise->valor_parcela * 12;
             $comprometimento = ($analise->valor_parcela / $analise->renda_mensal) * 100;
+            $isProcessing = $analise->status === \App\Enums\AnalysisStatus::PROCESSING_CONTRACT;
             $isContracted = $analise->status === \App\Enums\AnalysisStatus::CONTRACTED;
         @endphp
 
@@ -77,14 +61,34 @@
         <!-- Cabeçalho da Simulação -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-                <h2 class="text-3xl font-bold text-white">{{ $isContracted ? 'Crédito Contratado' : 'Simulação de Crédito' }}</h2>
+                <h2 class="text-3xl font-bold text-white">
+                    @if($isContracted)
+                        Crédito Contratado
+                    @elseif($isProcessing)
+                        Contratação em Processamento
+                    @else
+                        Simulação de Crédito
+                    @endif
+                </h2>
                 <p class="text-slate-400 mt-1">
-                    {{ $isContracted ? 'Confira as condições do crédito contratado.' : 'Revise as condições antes de confirmar a contratação.' }}
+                    @if($isContracted)
+                        Confira as condições do crédito contratado.
+                    @elseif($isProcessing)
+                        Sua contratação foi enviada para processamento.
+                    @else
+                        Revise as condições antes de confirmar a contratação.
+                    @endif
                 </p>
             </div>
             <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                {{ $isContracted ? 'Contratado' : 'Pré-aprovado' }}
+                @if($isContracted)
+                    Contratado
+                @elseif($isProcessing)
+                    Processando
+                @else
+                    Pré-aprovado
+                @endif
             </span>
         </div>
 
@@ -180,10 +184,12 @@
                 </div>
             @endif
 
-            @if($isContracted)
-                <h3 class="text-xl font-semibold text-white mb-2">Contratação concluída</h3>
+            @if($isContracted || $isProcessing)
+                <h3 class="text-xl font-semibold text-white mb-2">
+                    {{ $isContracted ? 'Contratação concluída' : 'Contratação em processamento' }}
+                </h3>
                 <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
-                    Este crédito já foi contratado e está disponível para consulta na listagem de contratações.
+                    {{ $isContracted ? 'Este crédito já foi contratado e está disponível para consulta na listagem de contratações.' : 'O pedido foi enviado para a fila e será concluído pelo worker.' }}
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -227,10 +233,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Contratação Realizada!</h3>
-            <p class="text-slate-400 text-sm mb-6">O crédito foi contratado com sucesso. Você receberá uma confirmação em breve.</p>
+            <h3 class="text-2xl font-bold text-white mb-2">Contratação Enviada!</h3>
+            <p class="text-slate-400 text-sm mb-6">O pedido foi enviado para processamento. O worker da fila finalizará a contratação.</p>
             <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-6 text-xs text-emerald-400 font-mono">
-                Status: CONTRATADO
+                Status: PROCESSANDO_CONTRATACAO
             </div>
             <div class="flex flex-col justify-center gap-3 sm:flex-row">
                 <a href="{{ url('/contratacoes') }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-8 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
@@ -248,30 +254,27 @@
         <p>&copy; 2026 Coop0156. Desafio Técnico Laravel.</p>
     </footer>
 
-    <!--
-      -- =========================================================================
-      -- Integração da confirmação de contratação.
-      -- =========================================================================
-      -- Ao clicar em "Confirmar Contratação", o candidato deve:
-      --   1. Mostrar o spinner e desabilitar o botão para evitar clique duplo.
-      --   2. Fazer requisição POST para '/api/analise-credito/{{ $analise->hashids_code }}/contratar'.
-      --   3. Em caso de sucesso (HTTP 200), exibir o modal de sucesso (#modal-sucesso).
-      --   4. Em caso de erro, exibir uma mensagem de feedback adequada para o usuário.
-      -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const btnConfirmar = document.getElementById('btn-confirmar');
+            const confirmButton = document.getElementById('btn-confirmar');
 
-            if (!btnConfirmar) {
+            if (!confirmButton) {
                 return;
             }
 
+            const spinner = document.getElementById('spinner-confirmar');
+            const buttonText = document.getElementById('txt-confirmar');
             const feedback = document.getElementById('feedback-contratacao');
+            const successModal = document.getElementById('modal-sucesso');
 
-            btnConfirmar.addEventListener('click', async () => {
-                btnConfirmar.disabled = true;
-                document.getElementById('spinner-confirmar').classList.remove('hidden');
-                document.getElementById('txt-confirmar').textContent = 'Processando...';
+            const setLoading = (loading) => {
+                confirmButton.disabled = loading;
+                spinner.classList.toggle('hidden', !loading);
+                buttonText.textContent = loading ? 'Processando...' : 'Confirmar Contratação';
+            };
+
+            confirmButton.addEventListener('click', async () => {
+                setLoading(true);
                 feedback.textContent = '';
 
                 try {
@@ -280,14 +283,23 @@
                         headers: { 'Accept': 'application/json' },
                     });
                     const body = await response.json();
-                    if (!response.ok) throw body;
-                    document.getElementById('modal-sucesso').classList.remove('hidden');
-                } catch (error) {
-                    feedback.textContent = error.message || 'Não foi possível confirmar a contratação.';
-                    btnConfirmar.disabled = false;
-                } finally {
-                    document.getElementById('spinner-confirmar').classList.add('hidden');
-                    document.getElementById('txt-confirmar').textContent = 'Confirmar Contratação';
+
+                    if (!response.ok) {
+                        feedback.textContent = body.message || 'Não foi possível confirmar a contratação.';
+                        setLoading(false);
+
+                        return;
+                    }
+
+                    successModal.classList.remove('hidden');
+                }
+                catch (error) {
+                    feedback.textContent = 'Não foi possível confirmar a contratação.';
+                    setLoading(false);
+                }
+                finally {
+                    spinner.classList.add('hidden');
+                    buttonText.textContent = 'Confirmar Contratação';
                 }
             });
         });

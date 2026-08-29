@@ -4,15 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Coop0156')</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = { theme: { extend: { fontFamily: { sans: ['Outfit', 'sans-serif'] }, colors: { darkBg: '#0b0f19', panelBorder: '#1e2d4a' } } } };
-    </script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        body { background: #0b0f19; font-family: Outfit, sans-serif; }
+        body { background: #0b0f19; }
         .glass-panel { background: rgba(19, 28, 46, .82); border: 1px solid rgba(30, 45, 74, .8); }
     </style>
     @stack('head')
