@@ -8,11 +8,14 @@ use Illuminate\Contracts\Pagination\Paginator;
 
 class EloquentCreditAnalysisRepository implements CreditAnalysisRepositoryInterface
 {
-    public function paginateContracted(int $perPage = 15): Paginator
+    public function paginateContracts(int $perPage = 15): Paginator
     {
         return CreditAnalysis::query()
             ->with('customer')
-            ->where('status', AnalysisStatus::CONTRACTED->value)
+            ->whereIn('status', [
+                AnalysisStatus::PROCESSING_CONTRACT->value,
+                AnalysisStatus::CONTRACTED->value,
+            ])
             ->latest('updated_at')
             ->simplePaginate($perPage);
     }
