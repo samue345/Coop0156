@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\CreditScoreProvider;
 use App\Domain\CreditAnalysis\CreditEligibilityEvaluator;
 use App\Domain\CreditAnalysis\Rules\IncomeCommitmentRule;
 use App\Domain\CreditAnalysis\Rules\InstallmentRule;
@@ -12,6 +13,7 @@ use App\Repositories\CustomerRepositoryInterface;
 use App\Repositories\EloquentCustomerRepository;
 use App\Repositories\CreditAnalysisRepositoryInterface;
 use App\Repositories\EloquentCreditAnalysisRepository;
+use App\Integrations\CreditBureauClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -33,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
 
         $this->app->bind(CustomerRepositoryInterface::class, EloquentCustomerRepository::class);
         $this->app->bind(CreditAnalysisRepositoryInterface::class, EloquentCreditAnalysisRepository::class);
+        $this->app->bind(CreditScoreProvider::class, CreditBureauClient::class);
     }
 
     /**
