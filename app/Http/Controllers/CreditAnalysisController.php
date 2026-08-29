@@ -44,7 +44,8 @@ class CreditAnalysisController extends Controller
     {
         try {
             $analysis = $this->analyses->request($request->analysisData());
-        } catch (CreditBureauException $exception) {
+        }
+        catch (CreditBureauException $exception) {
             return response()->json([
                 'message' => $exception->getMessage(),
             ], $exception->statusCode);
@@ -56,7 +57,7 @@ class CreditAnalysisController extends Controller
     /**
      * Confirma a contratação de uma análise de crédito aprovada.
      *
-     * POST /api/analise-credito/{id}/contratar
+     * POST /api/analise-credito/{creditAnalysis}/contratar
      *
      * Fluxo esperado:
      *  1. Buscar a análise pelo ID (retornar 404 se não encontrada).
