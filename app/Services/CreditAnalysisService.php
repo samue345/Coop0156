@@ -6,6 +6,7 @@ use App\Contracts\CreditScoreProvider;
 use App\Domain\CreditAnalysis\CreditContext;
 use App\Domain\CreditAnalysis\CreditEligibilityEvaluator;
 use App\Enums\AnalysisStatus;
+use App\Jobs\ProcessContractingJob;
 use App\Models\CreditAnalysis;
 use App\Repositories\CreditAnalysisRepositoryInterface;
 use App\Repositories\CustomerRepositoryInterface;
@@ -67,4 +68,14 @@ readonly class CreditAnalysisService
         return $this->analyses->update($analysis, ['score' => $score, ...$result]);
     }
 
+    public function startContracting(CreditAnalysis $analysis): CreditAnalysis
+    {
+        $analysis = $this->analyses->update($analysis, [
+            'status' => AnalysisStatus::PROCESSING_CONTRACT,
+        ]);
+
+        ProcessContractingJob::dispatch($analysis);
+
+        return $analysis;
+    }
 }

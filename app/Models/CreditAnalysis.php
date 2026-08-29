@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AnalysisStatus;
 use App\Enums\CreditType;
 use App\Models\Concerns\HasHashidsCode;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CreditAnalysis extends Model
 {
+    /** @use HasFactory<\Database\Factories\CreditAnalysisFactory> */
+    use HasFactory;
     use HasHashidsCode;
 
     protected $table = 'analises_credito';
@@ -58,4 +61,3 @@ class CreditAnalysis extends Model
         return $this->belongsTo(Customer::class, 'cliente_id');
     }
 }
-

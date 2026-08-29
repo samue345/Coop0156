@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Enums\AnalysisStatus;
+use App\Jobs\ProcessContractingJob;
 use App\Models\CreditAnalysis;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class CreditAnalysisTest extends TestCase
@@ -37,6 +39,8 @@ class CreditAnalysisTest extends TestCase
 
     public function test_it_contracts_an_approved_analysis(): void
     {
+        Queue::fake();
+
         $analysis = CreditAnalysis::create([
             'cpf' => '52998224725',
             'nome' => 'João da Silva',
@@ -50,12 +54,14 @@ class CreditAnalysisTest extends TestCase
         ]);
 
         $this->postJson("/api/analise-credito/{$analysis->id}/contratar")
-            ->assertOk()
-            ->assertJson(['status' => AnalysisStatus::CONTRACTED->value]);
+            ->assertAccepted()
+            ->assertJson(['status' => AnalysisStatus::PROCESSING_CONTRACT->value]);
 
         $this->assertDatabaseHas('analises_credito', [
             'id' => $analysis->id,
-            'status' => AnalysisStatus::CONTRACTED->value,
+            'status' => AnalysisStatus::PROCESSING_CONTRACT->value,
         ]);
+
+        Queue::assertPushed(ProcessContractingJob::class);
     }
 }
