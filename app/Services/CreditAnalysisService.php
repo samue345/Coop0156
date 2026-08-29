@@ -2,22 +2,22 @@
 
 namespace App\Services;
 
+use App\Contracts\CreditScoreProvider;
 use App\Domain\CreditAnalysis\CreditContext;
 use App\Domain\CreditAnalysis\CreditEligibilityEvaluator;
 use App\Enums\AnalysisStatus;
-use App\Integrations\CreditBureauClient;
 use App\Models\CreditAnalysis;
 use App\Repositories\CreditAnalysisRepositoryInterface;
 use App\Repositories\CustomerRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
-class CreditAnalysisService
+readonly class CreditAnalysisService
 {
     public function __construct(
-        private readonly CreditAnalysisRepositoryInterface $analyses,
-        private readonly CustomerRepositoryInterface $customers,
-        private readonly CreditBureauClient $bureau,
-        private readonly CreditEligibilityEvaluator $evaluator,
+        private CreditAnalysisRepositoryInterface $analyses,
+        private CustomerRepositoryInterface       $customers,
+        private CreditScoreProvider               $scoreProvider,
+        private CreditEligibilityEvaluator        $evaluator,
     ) {
     }
 
@@ -28,11 +28,11 @@ class CreditAnalysisService
     {
         $analysis = $this->createPendingAnalysis($data);
 
-        $score = $this->bureau->scoreFor($data['cpf']);
+        $score = $this->scoreProvider->scoreFor($data['cpf']);
 
         $decision = $this->evaluator->evaluate(new CreditContext(
-            (float) $data['renda_mensal'],
-            (float) $data['valor_solicitado'],
+            $data['renda_mensal'],
+            $data['valor_solicitado'],
             $score,
         ));
 

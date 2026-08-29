@@ -2,20 +2,19 @@
 
 namespace App\Integrations;
 
+use App\Contracts\CreditScoreProvider;
 use App\Exceptions\CreditBureauException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
-final class CreditBureauClient
-{
 
+final readonly class CreditBureauClient implements CreditScoreProvider
+{
     public function scoreFor(string $cpf): int
     {
         try {
-            $response = Http::timeout(config('services.score_bureau.timeout', 3))
-                ->get(
-                rtrim((string) config('services.score_bureau.url'), '/') . "/{$cpf}"
-            );
+            $response = $this->http()->get($cpf);
 
             $response->throw();
         }
@@ -42,5 +41,12 @@ final class CreditBureauClient
         }
 
         return $score;
+    }
+
+    private function http(): PendingRequest
+    {
+        return Http::baseUrl(rtrim(config('services.score_bureau.url'), '/'))
+            ->timeout(config('services.score_bureau.timeout', 3))
+            ->acceptJson();
     }
 }
