@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Services\CustomerService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class CustomerController extends Controller
 {
@@ -43,10 +44,10 @@ class CustomerController extends Controller
         return (new CustomerResource($customer))->response();
     }
 
-    public function destroy(Customer $customer): JsonResponse
+    public function destroy(Customer $customer): Response
     {
         $this->customers->delete($customer);
 
-        return response()->json(status: 204);
+        return response()->noContent();
     }
 }
