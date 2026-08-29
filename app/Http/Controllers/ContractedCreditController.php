@@ -14,8 +14,9 @@ class ContractedCreditController extends Controller
 
     public function index(): View
     {
-        return view('contratacoes.index', [
+        return view('contracts.index', [
             'contracts' => $this->analyses->paginateContracted(),
         ]);
     }
 }
+

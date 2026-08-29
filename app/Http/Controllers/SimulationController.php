@@ -20,6 +20,7 @@ class SimulationController extends Controller
 
         $analise = $creditAnalysis;
 
-        return view('simulacao', compact('analise'));
+        return view('simulation', compact('analise'));
     }
 }
+
