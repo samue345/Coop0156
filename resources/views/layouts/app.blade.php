@@ -26,6 +26,7 @@
             </a>
             <nav class="flex items-center gap-1 text-sm" aria-label="Navegação principal">
                 <a href="{{ url('/') }}" class="rounded-lg px-3 py-2 text-slate-400 transition hover:bg-slate-800 hover:text-white">Análise de crédito</a>
+                <a href="{{ url('/contratacoes') }}" class="rounded-lg px-3 py-2 text-slate-400 transition hover:bg-slate-800 hover:text-white">Contratações</a>
                 <a href="{{ url('/clientes') }}" class="rounded-lg px-3 py-2 text-slate-400 transition hover:bg-slate-800 hover:text-white">Clientes</a>
             </nav>
         </div>
