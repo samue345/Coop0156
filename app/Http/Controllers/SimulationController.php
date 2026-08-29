@@ -7,21 +7,15 @@ use App\Models\CreditAnalysis;
 
 class SimulationController extends Controller
 {
-    /**
-     * Exibe a tela de simulação/detalhes de uma análise aprovada.
-     *
-     * GET /simulacao/{id}
-     *
-     * @param  int  $id
-     * @return \Illuminate\View\View|\Illuminate\Http\RedirectResponse
-     */
-    public function show($id)
+    public function show(CreditAnalysis $creditAnalysis)
     {
-        $creditAnalysis = CreditAnalysis::findOrFail($id);
+        $availableStatuses = [
+            AnalysisStatus::APPROVED,
+            AnalysisStatus::CONTRACTED,
+        ];
 
-        // Só exibe a simulação para análises aprovadas
-        if ($creditAnalysis->status !== AnalysisStatus::APPROVED) {
-            return redirect('/')->with('erro', 'Esta análise não está disponível para simulação.');
+        if (! in_array($creditAnalysis->status, $availableStatuses, true)) {
+            return redirect('/')->with('erro', 'Esta análise não está disponível para visualização.');
         }
 
         $analise = $creditAnalysis;
