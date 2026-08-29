@@ -4,11 +4,14 @@ namespace App\Models;
 
 use App\Enums\AnalysisStatus;
 use App\Enums\CreditType;
+use App\Models\Concerns\HasHashidsCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CreditAnalysis extends Model
 {
+    use HasHashidsCode;
+
     protected $table = 'analises_credito';
 
     protected $fillable = [

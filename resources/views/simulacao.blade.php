@@ -52,34 +52,39 @@
                     <p class="text-xs text-slate-400">Desafio Análise de Crédito</p>
                 </div>
             </a>
-            <a href="/" class="text-sm text-slate-400 hover:text-emerald-400 transition-colors flex items-center gap-1">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                </svg>
-                Nova Análise
-            </a>
+            <nav class="flex items-center gap-2 text-sm" aria-label="Navegação principal">
+                <a href="{{ url('/') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">Nova Análise</a>
+                <a href="{{ url('/contratacoes') }}" class="text-slate-400 hover:text-emerald-400 transition-colors">Contratações</a>
+            </nav>
         </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-grow max-w-4xl mx-auto px-4 py-12 w-full">
+        @php
+            $valorTotal = $analise->valor_parcela * 12;
+            $comprometimento = ($analise->valor_parcela / $analise->renda_mensal) * 100;
+            $isContracted = $analise->status === \App\Enums\AnalysisStatus::CONTRACTED;
+        @endphp
 
         <!-- Breadcrumb -->
         <nav class="flex items-center gap-2 text-sm text-slate-500 mb-8">
             <a href="/" class="hover:text-slate-300 transition-colors">Análise</a>
             <span>/</span>
-            <span class="text-slate-300">Simulação #{{ $analise->id }}</span>
+            <span class="text-slate-300">Simulação</span>
         </nav>
 
         <!-- Cabeçalho da Simulação -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
             <div>
-                <h2 class="text-3xl font-bold text-white">Simulação de Crédito</h2>
-                <p class="text-slate-400 mt-1">Revise as condições antes de confirmar a contratação.</p>
+                <h2 class="text-3xl font-bold text-white">{{ $isContracted ? 'Crédito Contratado' : 'Simulação de Crédito' }}</h2>
+                <p class="text-slate-400 mt-1">
+                    {{ $isContracted ? 'Confira as condições do crédito contratado.' : 'Revise as condições antes de confirmar a contratação.' }}
+                </p>
             </div>
             <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
                 <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                Pré-aprovado
+                {{ $isContracted ? 'Contratado' : 'Pré-aprovado' }}
             </span>
         </div>
 
@@ -141,14 +146,17 @@
                             R$ {{ number_format($analise->valor_parcela, 2, ',', '.') }}
                         </p>
                     </div>
+                    <div class="pt-3 border-t border-panelBorder">
+                        <p class="text-xs text-slate-500">Valor Total a Pagar</p>
+                        <p class="text-xl font-bold text-emerald-400 mt-1">
+                            R$ {{ number_format($valorTotal, 2, ',', '.') }}
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Aviso de Comprometimento de Renda -->
-        @php
-            $comprometimento = ($analise->valor_parcela / $analise->renda_mensal) * 100;
-        @endphp
         <div class="glass-panel rounded-2xl p-5 mt-6 flex items-center gap-4">
             <div class="h-10 w-10 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -164,7 +172,6 @@
             </div>
         </div>
 
-        <!-- Botão de Contratação -->
         <div class="mt-8 glass-panel rounded-2xl p-8 text-center">
 
             @if(session('erro'))
@@ -173,25 +180,41 @@
                 </div>
             @endif
 
-            <h3 class="text-xl font-semibold text-white mb-2">Confirmar Contratação</h3>
-            <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
-                Ao confirmar, você está simulando a solicitação formal de contratação deste crédito. Esta ação não pode ser desfeita.
-            </p>
+            @if($isContracted)
+                <h3 class="text-xl font-semibold text-white mb-2">Contratação concluída</h3>
+                <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
+                    Este crédito já foi contratado e está disponível para consulta na listagem de contratações.
+                </p>
 
-            <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                <a href="/" class="px-8 py-3.5 rounded-xl border border-panelBorder text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all font-medium text-sm">
-                    Cancelar
-                </a>
-                <button id="btn-confirmar"
-                    class="px-10 py-3.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-indigo-500/20 flex items-center gap-2 justify-center">
-                    <span id="txt-confirmar">Confirmar Contratação</span>
-                    <svg id="spinner-confirmar" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                </button>
-            </div>
-            <p id="feedback-contratacao" class="mt-4 text-sm text-red-400"></p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{{ url('/contratacoes') }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-panelBorder px-8 text-sm font-medium text-slate-300 transition hover:border-slate-500 hover:text-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-darkBg">
+                        Ver contratações
+                    </a>
+                    <a href="{{ url('/') }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-8 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
+                        Nova análise
+                    </a>
+                </div>
+            @else
+                <h3 class="text-xl font-semibold text-white mb-2">Confirmar Contratação</h3>
+                <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
+                    Ao confirmar, você está simulando a solicitação formal de contratação deste crédito. Esta ação não pode ser desfeita.
+                </p>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="/" class="inline-flex h-12 items-center justify-center rounded-xl border border-panelBorder px-8 text-sm font-medium text-slate-400 transition hover:border-slate-500 hover:text-slate-200 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-darkBg">
+                        Cancelar
+                    </a>
+                    <button id="btn-confirmar"
+                        class="flex h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-blue-500 to-indigo-600 px-10 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition duration-200 hover:from-blue-600 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-darkBg disabled:cursor-not-allowed disabled:opacity-70 active:scale-[0.98]">
+                        <span id="txt-confirmar">Confirmar Contratação</span>
+                        <svg id="spinner-confirmar" class="animate-spin h-4 w-4 hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+                <p id="feedback-contratacao" class="mt-4 text-sm text-red-400"></p>
+            @endif
         </div>
 
     </main>
@@ -209,9 +232,14 @@
             <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-6 text-xs text-emerald-400 font-mono">
                 Status: CONTRATADO
             </div>
-            <a href="/" class="inline-block px-8 py-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20 rounded-xl text-sm font-medium transition-all">
-                Iniciar Nova Simulação
-            </a>
+            <div class="flex flex-col justify-center gap-3 sm:flex-row">
+                <a href="{{ url('/contratacoes') }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-8 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
+                    Ver contratações
+                </a>
+                <a href="/" class="inline-flex h-12 items-center justify-center rounded-xl border border-panelBorder px-8 text-sm font-medium text-slate-300 transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2 focus:ring-offset-darkBg">
+                    Nova análise
+                </a>
+            </div>
         </div>
     </div>
 
@@ -226,13 +254,17 @@
       -- =========================================================================
       -- Ao clicar em "Confirmar Contratação", o candidato deve:
       --   1. Mostrar o spinner e desabilitar o botão para evitar clique duplo.
-      --   2. Fazer requisição POST para '/api/analise-credito/{{ $analise->id }}/contratar'.
+      --   2. Fazer requisição POST para '/api/analise-credito/{{ $analise->hashids_code }}/contratar'.
       --   3. Em caso de sucesso (HTTP 200), exibir o modal de sucesso (#modal-sucesso).
       --   4. Em caso de erro, exibir uma mensagem de feedback adequada para o usuário.
       -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const btnConfirmar = document.getElementById('btn-confirmar');
+
+            if (!btnConfirmar) {
+                return;
+            }
 
             const feedback = document.getElementById('feedback-contratacao');
 
@@ -243,7 +275,7 @@
                 feedback.textContent = '';
 
                 try {
-                    const response = await fetch('/api/analise-credito/{{ $analise->id }}/contratar', {
+                    const response = await fetch('/api/analise-credito/{{ $analise->hashids_code }}/contratar', {
                         method: 'POST',
                         headers: { 'Accept': 'application/json' },
                     });
