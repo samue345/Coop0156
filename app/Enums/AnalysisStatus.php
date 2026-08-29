@@ -9,4 +9,13 @@ enum AnalysisStatus: string
     case REJECTED = 'reprovado';
     case PROCESSING_CONTRACT = 'processando_contratacao';
     case CONTRACTED = 'contratado';
+
+    public function canBeViewedInSimulation(): bool
+    {
+        return in_array($this, [
+            self::APPROVED,
+            self::PROCESSING_CONTRACT,
+            self::CONTRACTED,
+        ], true);
+    }
 }

@@ -8,6 +8,10 @@ use App\Models\Concerns\HasHashidsCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @property AnalysisStatus $status
+ * @property CreditType $tipo_credito
+ */
 class CreditAnalysis extends Model
 {
     use HasHashidsCode;
@@ -54,3 +58,4 @@ class CreditAnalysis extends Model
         return $this->belongsTo(Customer::class, 'cliente_id');
     }
 }
+

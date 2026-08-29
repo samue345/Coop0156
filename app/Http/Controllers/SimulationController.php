@@ -2,25 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\AnalysisStatus;
 use App\Models\CreditAnalysis;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class SimulationController extends Controller
 {
-    public function show(CreditAnalysis $creditAnalysis)
+    public function show(CreditAnalysis $creditAnalysis): View|RedirectResponse
     {
-        $availableStatuses = [
-            AnalysisStatus::APPROVED,
-            AnalysisStatus::CONTRACTED,
-        ];
-
-        if (! in_array($creditAnalysis->status, $availableStatuses, true)) {
+        if (!$creditAnalysis->status->canBeViewedInSimulation()) {
             return redirect('/')->with('erro', 'Esta análise não está disponível para visualização.');
         }
 
-        $analise = $creditAnalysis;
-
-        return view('simulation', compact('analise'));
+        return view('simulation', ['analise' => $creditAnalysis]);
     }
 }
-
