@@ -55,39 +55,24 @@ class CreditAnalysisController extends Controller
     }
 
     /**
-     * Confirma a contratação de uma análise de crédito aprovada.
-     *
-     * POST /api/analise-credito/{creditAnalysis}/contratar
-     *
-     * Fluxo esperado:
-     *  1. Buscar a análise pelo ID (retornar 404 se não encontrada).
-     *  2. Verificar se o status é 'aprovado' (retornar 422 se não for).
-     *  3. Atualizar o status para 'contratado'.
-     *  4. Retornar confirmação de sucesso.
-     *
-     * ⭐ DIFERENCIAL OPCIONAL: Em vez de atualizar diretamente para 'contratado',
-     *    atualize para 'processando_contratacao' e dispare o Job ProcessContractingJob
-     *    para a fila. O Job ficará responsável por finalizar e atualizar para 'contratado'.
-     *
      * @param  CreditAnalysis  $creditAnalysis
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResponse
      */
-    public function contract(CreditAnalysis $creditAnalysis)
+    public function contract(CreditAnalysis $creditAnalysis): JsonResponse
     {
-        if ($creditAnalysis->status !== AnalysisStatus::APPROVED) {
+        if ($creditAnalysis->status !== AnalysisStatus::APPROVED)
+        {
             return response()->json([
                 'message' => 'A análise precisa estar aprovada para ser contratada.',
                 'status' => $creditAnalysis->status?->value,
             ], 422);
         }
 
-        $creditAnalysis->update([
-            'status' => AnalysisStatus::CONTRACTED,
-        ]);
+        $creditAnalysis = $this->analyses->startContracting($creditAnalysis);
 
         return response()->json([
-            'message' => 'Contratação realizada com sucesso.',
-            'status' => AnalysisStatus::CONTRACTED->value,
-        ]);
+            'message' => 'Contratação enviada para processamento.',
+            'status' => $creditAnalysis->status->value,
+        ], 202);
     }
 }
