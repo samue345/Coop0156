@@ -3,9 +3,12 @@
 namespace App\Repositories;
 
 use App\Models\CreditAnalysis;
+use Illuminate\Contracts\Pagination\Paginator;
 
 interface CreditAnalysisRepositoryInterface
 {
+    public function paginateContracted(int $perPage = 15): Paginator;
+
     /**
      * @param  array<string, mixed>  $data
      */
