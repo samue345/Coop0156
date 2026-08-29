@@ -4,36 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Plataforma de Crédito Cooperativo</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        coop: {
-                            50: '#f0fdf4',
-                            100: '#dcfce7',
-                            500: '#22c55e',
-                            600: '#16a34a',
-                            700: '#15803d',
-                            900: '#14532d',
-                        },
-                        darkBg: '#0b0f19',
-                        panelBg: '#131c2e',
-                        panelBorder: '#1e2d4a',
-                    }
-                }
-            }
-        }
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         body {
             background-color: #0b0f19;
@@ -470,11 +441,11 @@
                         throw new Error(body?.message || 'Não foi possível confirmar a contratação.');
                     }
 
-                    document.getElementById('res-status').textContent = 'contratado';
+                    document.getElementById('res-status').textContent = body?.status || 'processando_contratacao';
                     linkSimulacao.href = '/contratacoes';
                     linkSimulacao.textContent = 'Ver contratações';
                     feedbackContratacao.className = 'mt-3 text-center text-sm text-emerald-400';
-                    feedbackContratacao.textContent = body?.message || 'Contratação realizada com sucesso.';
+                    feedbackContratacao.textContent = body?.message || 'Contratação enviada para processamento.';
                 } catch (error) {
                     feedbackContratacao.className = 'mt-3 text-center text-sm text-red-400';
                     feedbackContratacao.textContent = error.message || 'Não foi possível confirmar a contratação.';
