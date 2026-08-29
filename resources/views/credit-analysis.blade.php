@@ -171,8 +171,8 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-slate-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 class="text-lg font-medium text-slate-400">Aguardando Solicitação</h3>
-                <p class="text-sm text-slate-500 mt-2 max-w-xs">Preencha os dados do formulário ao lado e solicite a análise para simular as condições.</p>
+                <h3 id="resultado-vazio-titulo" class="text-lg font-medium text-slate-400">Aguardando Solicitação</h3>
+                <p id="resultado-vazio-descricao" class="text-sm text-slate-500 mt-2 max-w-xs">Preencha os dados do formulário ao lado e solicite a análise para simular as condições.</p>
             </div>
 
             <!-- Card de Resultado da Análise -->
@@ -321,6 +321,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const form = document.getElementById('form-analise');
             const resultadoVazio = document.getElementById('resultado-vazio');
+            const resultadoVazioTitulo = document.getElementById('resultado-vazio-titulo');
+            const resultadoVazioDescricao = document.getElementById('resultado-vazio-descricao');
             const resultadoAnalise = document.getElementById('resultado-analise');
             const containerContratacao = document.getElementById('container-contratacao');
             const linkSimulacao = document.getElementById('link-simulacao');
@@ -334,6 +336,17 @@
             const loadingSpinnerContratar = document.getElementById('loading-spinner-contratar');
             const feedbackContratacao = document.getElementById('feedback-contratacao');
             let currentAnalysisCode = null;
+            const waitingTitle = 'Aguardando Solicitação';
+            const waitingDescription = 'Preencha os dados do formulário ao lado e solicite a análise para simular as condições.';
+
+            const setAnalysisLoading = (loading) => {
+                resultadoVazioTitulo.textContent = loading ? 'Processando análise...' : waitingTitle;
+                resultadoVazioDescricao.textContent = loading
+                    ? 'Aguarde enquanto consultamos seus dados.'
+                    : waitingDescription;
+                resultadoVazio.classList.toggle('hidden', !loading);
+                resultadoAnalise.classList.toggle('hidden', loading);
+            };
 
             cpf.addEventListener('input', () => {
                 cpf.value = cpfMask(cpf.value);
@@ -362,6 +375,7 @@
                 const button = document.getElementById('btn-solicitar');
                 button.disabled = true;
                 loadingSpinner.classList.remove('hidden');
+                setAnalysisLoading(true);
                 const payload = Object.fromEntries(new FormData(form));
                 payload.cpf = onlyDigits(payload.cpf);
                 payload.renda_mensal = moneyValue(payload.renda_mensal);
@@ -372,6 +386,7 @@
                     form.appendChild(alertBox);
                     button.disabled = false;
                     loadingSpinner.classList.add('hidden');
+                    setAnalysisLoading(false);
                     return;
                 }
 
@@ -380,6 +395,7 @@
                     form.appendChild(alertBox);
                     button.disabled = false;
                     loadingSpinner.classList.add('hidden');
+                    setAnalysisLoading(false);
                     return;
                 }
 
@@ -395,6 +411,7 @@
                     }
 
                     const analysis = body.data || body;
+                    setAnalysisLoading(false);
                     resultadoVazio.classList.add('hidden');
                     resultadoAnalise.classList.remove('hidden');
                     document.getElementById('res-nome').textContent = analysis.nome || payload.nome;
@@ -424,6 +441,7 @@
                 catch (error) {
                     alertBox.textContent = error.message || 'Não foi possível solicitar a análise.';
                     form.appendChild(alertBox);
+                    setAnalysisLoading(false);
                 } finally {
                     button.disabled = false;
                     loadingSpinner.classList.add('hidden');
