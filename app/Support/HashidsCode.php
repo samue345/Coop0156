@@ -4,9 +4,9 @@ namespace App\Support;
 
 final class HashidsCode
 {
-    private const ALPHABET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    private const string ALPHABET = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
-    private const MIN_LENGTH = 8;
+    private const int MIN_LENGTH = 8;
 
     public static function encode(int $id, string $namespace = 'default'): string
     {
@@ -19,7 +19,7 @@ final class HashidsCode
         $encoded = '';
         $value = $id;
 
-        while ($value > 0) {
+        while ($value) {
             $encoded = $alphabet[$value % $base].$encoded;
             $value = intdiv($value, $base);
         }
@@ -93,6 +93,6 @@ final class HashidsCode
 
     private static function salt(): string
     {
-        return (string) (config('app.key') ?: config('app.name', 'Laravel'));
+        return (config('app.key') ?: config('app.name', 'Laravel'));
     }
 }
