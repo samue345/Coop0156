@@ -9,7 +9,10 @@ Então se a migration já rodou rode o comando:
 Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
 
 ## O que foi implementado
-Eu implementei tudo o que estava no readme, inclusive os dois diferenciais, e, além disso, eu criei uma listagem paginada de contratações.
+Eu implementei tudo o que estava no readme, todos os obrigatórios e diferenciais. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios, na tela de Simulação e contratação fiz todos os itens obrigatórios, criei diversos testes tanto os obrigatórios e uma quantidade consideravel de não obrigatórios, fiz melhorias no front-end como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
+
+
+Abaixo eu explico com mais detalhes algumas implementações e explico os motivos pelos quais eu implementei dessa forma. 
 
 ### 1. CRUD de clientes
 Eu criei os métodos de CRUD utilizando uma camada de Controller, Service e uma camada de Repository para separar as regras de negócio do acesso aos dados. Pensando no princípio da Inversão de Dependência do SOLID, o Service recebe o Repository por injeção de dependência, dependendo de uma interface em vez de uma implementação. O bind entre a interface e a implementação é registrado no AppServiceProvider. Assim, o código fica menos acoplado e, caso eu precise trocar a estratégia de persistência ou isolar melhor a regra de negócio do ORM, basta criar uma nova implementação do Repository mantendo o mesmo contrato. 
@@ -48,12 +51,15 @@ Crie a listagem de contratações, porque acho que é bom o uuário ver quais an
 
 ### 4. Testes automatizados 
 
-<img width="888" height="143" alt="image" src="https://github.com/user-attachments/assets/cf10d684-d7cb-42db-841a-3d0df203f8b7" />
+<img width="383" height="104" alt="image" src="https://github.com/user-attachments/assets/ce3455b8-09db-4b8f-85e2-d254ec8d3ce0" />
 
 Eu criei diversos testes, todos os testes obrigatórios, além de outros que eu achei necessário, acredito que os testes estão cobrindo uma parte consideravel do código.
 
-### 5. Melhorias de performance
+### 5. Melhorias de performance e segurança
 
-E
+Também fiz algumas melhorias de performance no frontend e no ambiente de execução com Sail.
+
+No frontend, removi o uso do Tailwind via CDN e passei a carregar os assets com Vite usando app.js. Antes, algumas telas carregavam o Tailwind diretamente pelo navegador e definiam configurações de tema dentro da própria view. Com a mudança, o CSS passa a ser processado no build da aplicação, assim o Tailwind gera apenas as classes utilizadas nas views e nos arquivos js. Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. assim, chamadas para API, carregamento de páginas e assets não fica tão facilmente bloqueados por uma única requisição em andamento.
+Essa melhoria é voltada ao ambiente local Em produção, o correto seria usar outras estrategias. Alem disso eu criei duas middleware, uma para rotas de api, porém ela não protege a rota de mock da Bureau e para rotas web. São middleware bem simples, a de API adiciona headers como X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy e Cache-Control. A intenção foi reduzir riscos comuns, como MIME sniffing, carregamento da aplicação em iframe, exposição de informações por referrer e uso indevido de permissões do navegador. A de adiciona os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API. Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e segurança conforme o tipo de resposta.
 
 
