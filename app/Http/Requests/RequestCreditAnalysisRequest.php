@@ -47,12 +47,18 @@ class RequestCreditAnalysisRequest extends FormRequest
      */
     public function analysisData(): array
     {
-        return $this->safe()->only([
+        $data = $this->safe()->only([
             'nome',
             'cpf',
             'renda_mensal',
             'tipo_credito',
             'valor_solicitado',
         ]);
+
+        return [
+            ...$data,
+            'renda_mensal' => (float) $data['renda_mensal'],
+            'valor_solicitado' => (float) $data['valor_solicitado'],
+        ];
     }
 }
