@@ -445,7 +445,7 @@
                     linkSimulacao.href = '/contratacoes';
                     linkSimulacao.textContent = 'Ver contratações';
                     feedbackContratacao.className = 'mt-3 text-center text-sm text-emerald-400';
-                    feedbackContratacao.textContent = body?.message || 'Contratação enviada para processamento.';
+                    feedbackContratacao.textContent = body?.message || 'Contratação solicitada com sucesso. Acompanhe o status em Contratações.';
                 } catch (error) {
                     feedbackContratacao.className = 'mt-3 text-center text-sm text-red-400';
                     feedbackContratacao.textContent = error.message || 'Não foi possível confirmar a contratação.';

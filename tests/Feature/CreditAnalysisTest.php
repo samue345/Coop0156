@@ -340,7 +340,10 @@ class CreditAnalysisTest extends TestCase
 
         $this->postJson("/api/analise-credito/{$analysis->id}/contratar")
             ->assertAccepted()
-            ->assertJson(['status' => AnalysisStatus::PROCESSING_CONTRACT->value]);
+            ->assertJson([
+                'message' => 'Contratação solicitada com sucesso. Acompanhe o status em Contratações.',
+                'status' => AnalysisStatus::PROCESSING_CONTRACT->value,
+            ]);
 
         $this->assertDatabaseHas('analises_credito', [
             'id' => $analysis->id,

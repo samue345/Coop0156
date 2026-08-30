@@ -189,7 +189,7 @@
                     {{ $isContracted ? 'Contratação concluída' : 'Contratação em processamento' }}
                 </h3>
                 <p class="text-slate-400 text-sm mb-8 max-w-md mx-auto">
-                    {{ $isContracted ? 'Este crédito já foi contratado e está disponível para consulta na listagem de contratações.' : 'O pedido foi enviado para a fila e será concluído pelo worker.' }}
+                    {{ $isContracted ? 'Este crédito já foi contratado e está disponível para consulta na listagem de contratações.' : 'Recebemos sua solicitação. Acompanhe o status na listagem de contratações.' }}
                 </p>
 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -233,10 +233,10 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                 </svg>
             </div>
-            <h3 class="text-2xl font-bold text-white mb-2">Contratação Enviada!</h3>
-            <p class="text-slate-400 text-sm mb-6">O pedido foi enviado para processamento. O worker da fila finalizará a contratação.</p>
-            <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-6 text-xs text-emerald-400 font-mono">
-                Status: PROCESSANDO_CONTRATACAO
+            <h3 class="text-2xl font-bold text-white mb-2">Contratação Solicitada</h3>
+            <p class="text-slate-400 text-sm mb-6">Recebemos sua solicitação. Acompanhe o status na listagem de contratações.</p>
+            <div class="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-3 mb-6 text-xs font-semibold text-emerald-400">
+                Status: Em processamento
             </div>
             <div class="flex flex-col justify-center gap-3 sm:flex-row">
                 <a href="{{ url('/contratacoes') }}" class="inline-flex h-12 items-center justify-center rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-8 text-sm font-medium text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">

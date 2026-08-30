@@ -53,7 +53,7 @@ class CreditAnalysisController extends Controller
         $creditAnalysis = $this->analyses->startContracting($creditAnalysis);
 
         return response()->json([
-            'message' => 'Contratação enviada para processamento.',
+            'message' => 'Contratação solicitada com sucesso. Acompanhe o status em Contratações.',
             'status' => $creditAnalysis->status->value,
         ], 202);
     }
