@@ -3,15 +3,14 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasHashidsCode;
+use Database\Factories\CustomerFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Customer extends Model
 {
-    /** @use HasFactory<\Database\Factories\CustomerFactory> */
-    use HasFactory;
-    use HasHashidsCode;
+    use HasFactory, HasHashidsCode;
 
     protected $table = 'clientes';
 
@@ -22,6 +21,11 @@ class Customer extends Model
         'telefone',
         'renda_mensal',
     ];
+
+    protected static function newFactory(): CustomerFactory
+    {
+        return CustomerFactory::new();
+    }
 
     /**
      * Get the attributes that should be cast.

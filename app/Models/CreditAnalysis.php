@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\AnalysisStatus;
 use App\Enums\CreditType;
 use App\Models\Concerns\HasHashidsCode;
+use Database\Factories\CreditAnalysisFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,9 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class CreditAnalysis extends Model
 {
-    /** @use HasFactory<\Database\Factories\CreditAnalysisFactory> */
-    use HasFactory;
-    use HasHashidsCode;
+    use HasFactory, HasHashidsCode;
 
     protected $table = 'analises_credito';
 
@@ -34,6 +33,11 @@ class CreditAnalysis extends Model
         'valor_parcela',
         'motivo_rejeicao',
     ];
+
+    protected static function newFactory(): CreditAnalysisFactory
+    {
+        return CreditAnalysisFactory::new();
+    }
 
     /**
      * Get the attributes that should be cast.
