@@ -24,7 +24,14 @@ final readonly class CreditBureauClient implements CreditScoreProvider
                 504
             );
         }
-        catch (RequestException) {
+        catch (RequestException $exception) {
+            if ($exception->response->status() === 429) {
+                throw new CreditBureauException(
+                    'O Bureau de Crédito atingiu o limite de consultas. Tente novamente mais tarde.',
+                    429
+                );
+            }
+
             throw new CreditBureauException(
                 'O Bureau de Crédito está indisponível.',
                 502
