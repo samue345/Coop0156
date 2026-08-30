@@ -18,25 +18,6 @@ class CreditAnalysisController extends Controller
     }
 
     /**
-     * Solicita uma nova análise de crédito.
-     *
-     * POST /api/analise-credito
-     *
-     * Campos esperados no body (JSON):
-     *  - nome: string, obrigatório
-     *  - cpf: string, obrigatório (11 dígitos)
-     *  - renda_mensal: numeric, obrigatório
-     *  - tipo_credito: string, obrigatório (pessoal | imobiliario | automotivo)
-     *  - valor_solicitado: numeric, obrigatório
-     *
-     * Fluxo esperado:
-     *  1. Validar os dados de entrada.
-     *  2. Persistir a análise no banco com status 'pendente'.
-     *  3. Consultar a API do Bureau de Crédito (GET /api/mock/bureau/{cpf}) via Http::.
-     *  4. Tratar falhas de comunicação com o Bureau (timeout, HTTP 500, resposta malformada).
-     *  5. Aplicar as regras de negócio (renda mínima, faixas de score, comprometimento de renda).
-     *  6. Atualizar e retornar a análise persistida com o resultado final.
-     *
      * @param  RequestCreditAnalysisRequest  $request
      * @return JsonResponse
      */
@@ -45,7 +26,8 @@ class CreditAnalysisController extends Controller
         try {
             $analysis = $this->analyses->request($request->analysisData());
         }
-        catch (CreditBureauException $exception) {
+        catch (CreditBureauException $exception)
+        {
             return response()->json([
                 'message' => $exception->getMessage(),
             ], $exception->statusCode);
