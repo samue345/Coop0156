@@ -1,1 +1,65 @@
 # Sistema de Análise de Crédito Cooperativo (Coop0156)
+
+## Algumas Considerações
+No fluxo de criação de análise de crédito, um novo cliente deve ser criado caso ele não exista. Ele deve ser criado com os dados recebidos do formulário, que são nome, CPF e renda mensal como requisito. A questão é que, na migração de clientes, o email é not null. Pensando nisso, eu alterei a migration, deixando o email nullable. Entretanto, no CRUD de clientes, o email é obrigatório, então eu resolvi isso a nível de código, ou seja, no banco é nullable para manter os requisitos do fluxo de análise de crédito, porém eu deixo o email como obrigatório no CRUD de clientes.
+Então se a migration já rodou rode o comando:
+
+```./vendor/bin/sail artisan migrate:fresh```
+
+Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
+
+## O que foi implementado
+Eu implementei tudo o que estava no readme, todos os obrigatórios e diferenciais. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios, na tela de Simulação e contratação fiz todos os itens obrigatórios, criei diversos testes tanto os obrigatórios e uma quantidade consideravel de não obrigatórios, fiz melhorias no front-end como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
+
+
+Abaixo eu explico com mais detalhes algumas implementações e explico os motivos pelos quais eu implementei dessa forma. 
+
+### 1. CRUD de clientes
+Eu criei os métodos de CRUD utilizando uma camada de Controller, Service e uma camada de Repository para separar as regras de negócio do acesso aos dados. Pensando no princípio da Inversão de Dependência do SOLID, o Service recebe o Repository por injeção de dependência, dependendo de uma interface em vez de uma implementação. O bind entre a interface e a implementação é registrado no AppServiceProvider. Assim, o código fica menos acoplado e, caso eu precise trocar a estratégia de persistência ou isolar melhor a regra de negócio do ORM, basta criar uma nova implementação do Repository mantendo o mesmo contrato. 
+
+Eu criei todas as validações com form request (Uma alternativa interessante para o form request seria um pacote do spatie chamado Laravel data, porque é possível fazer as validações que o form request faz e além disso ele é um DTO, dessa forma eu consigo tipar os atributos, e fazer formatações) 
+na criação de cliente, como a de nome obrigatório, email obrigatório, formato válido e único, renda mensal sendo obrigatório com número positivo, na válidação de CPF achei válido criar uma Rule "ValidCPF" porque eu faço a validação de CPF na criação e edição de cliente e também na criação de análise de crédito, e Além de validar se o CPF é obrigatório, possui 11 dígitos e é único, também verifico se ele é um CPF válido. 
+
+Foram criadas as rotas de detalhe do cliente, responsável por retornar os dados de um cliente específico. Como a rota utiliza route model binding com suporte a Hashids, o parâmetro recebido é resolvido automaticamente para o model correspondente. Quando o código informado não representa um cliente válido ou existente, a aplicação retorna 404. Também implementei a rota de atualização, mantendo as validações com FormRequest e tratando a unicidade de CPF e e-mail sem considerar o próprio registro editado. Por fim, criei a rota de remoção, que exclui o cliente informado e retorna 204 No Content quando a operação é concluída com sucesso.
+
+Eu criei o front end da tela de cadastro de cliente, O formulário é validado no front-end para evitar requests denecessárias para o servidor e criei uma listagem paginada de clientes utilizando simplePaginate, pois ele não executa uma consulta adicional de COUNT(*) para calcular o total de registros, tendo melhor performance que o paginate. Também utilizei CustomerResource para padronizar o formato das respostas da API. As respostas expõem um código público do cliente via Hashids, evitando depender diretamente do id incremental do banco nas interações externas.
+
+
+### 2. Integração com o Bureau e Regras de Negócio
+
+implementei a integração com o Bureau de Crédito por meio de um client específico, o CreditBureauClient, responsável por consultar o score do cliente a partir do CPF. Para reduzir o acoplamento, a aplicação depende da interface CreditScoreProvider, e não diretamente da implementação concreta. Com isso, os services dependem apenas de um contrato, enquanto detalhes como HTTP, URL, timeout, tratamento de erro e formato da resposta ficam isolados na camada de integração. Essa decisão facilita manutenção e permite trocar futuramente o provedor de score criando uma nova implementação da mesma interface. Também apliquei rate limit na rota de solicitação de análise de crédito. Em routes/api.php, a rota POST /api/analise-credito usa o middleware throttle:credit-analysis, e o limite é configurado no AppServiceProvider com Limit::perMinute(10)->by($request->ip()). Essa proteção evita excesso de chamadas por IP em um endpoint sensível, já que a solicitação de análise dispara consulta ao Bureau e executa as regras de elegibilidade.
+
+As regras de negócio da análise foram centralizadas no domínio, dentro de app/Domain/CreditAnalysis. Então, criei a interface CreditRule, que define o contrato comum das regras com o método "evaluate". Cada rule avalia uma parte específica da política de crédito e retorna uma decisão apenas quando precisa reprovar ou encerrar o fluxo. Quando a rule retorna null, o avaliador entende que o fluxo pode continuar para a próxima regra. O CreditEligibilityEvaluator é responsável por orquestrar essas regras em sequência. Ele recebe uma lista de rules por injeção de dependência, e percorre cada uma até encontrar uma decisão. Essa abordagem deixa cada critério de elegibilidade isolado em uma classe própria, facilitando manutenção e futuras alterações, porque dessa forma, não se faz necessário criar um if a cada regra nova que for criada, evitando assim a concentração de ifs em um método só.
+
+As regras foram separadas por responsabilidade: MinimumIncomeRule que valida a renda mínima; MinimumScoreRule que reprova scores abaixo do limite permitido; InterestRateRule que define a taxa de juros conforme a faixa de score; InstallmentRule que calcula o valor da parcela; e IncomeCommitmentRule que valida se a parcela ultrapassa o percentual máximo de comprometimento da renda. Essa ordem é muito importante, porque algumas regras enriquecem o CreditContext com dados calculados, como taxa de juros e parcela, que são usados pelas regras seguintes.
+
+Também extraí os valores fixos de negócio para constantes dentro das próprias rules, como renda mínima, score mínimo de aprovação, score para melhor taxa, taxas de juros, quantidade de parcelas e percentual máximo de comprometimento da renda. Fiz isso com a inteção de evitar números mágicos no código, isso ajuda quando outro desenvolvedor for ler e entender o código quando dar manutenção porque não vai ser necessário interpretar cálculos espalhados pela aplicação.
+
+
+### 3. Tela de Simulação e Contratação
+
+Na tela de simulação, implementei a integração do frontend com o fluxo real de contratação, adicionei o JavaScript responsável por chamar o endpoint POST /api/analise-credito/{creditAnalysis}/contratar, controlar o estado de carregamento, exibir mensagens de erro e apresentar uma confirmação quando a contratação é solicitada com sucesso. também implementei a integração do botão de contratação com o fluxo real da aplicação.
+
+Na tela de simulação eu não criei nenhum service, só o SimulationController, já que ele só faz validação simples e chama uma view. Essa validação verifica se a análise pode ser exibida usando o método canBeViewedInSimulation() do enum AnalysisStatus. Essa regra permite visualizar apenas análises com status aprovado, processando_contratacao ou contratado, redirecionando análises pendentes ou reprovadas para a tela inicial.
+
+No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
+
+Por esse motivo, acredito que 202 Accepted no endpoint de contratação faz mais sentido que 200 OK. Como a requisição apenas aceita a solicitação e inicia um processamento assíncrono, ela não deve afirmar que a contratação já foi concluída naquele instante. O 202 Accepted representa melhor esse comportamento: a solicitação foi recebida e será processada. Isso deixa o contrato da API mais fiel ao funcionamento real do sistema.
+
+Crie a listagem de contratações, porque acho que é bom o uuário ver quais análises estão em processando contratacao e contratado. A query filtra apenas os status relevantes, e carrega o relacionamento com cliente usando Eager Loading with('customer') para evitar n+1 query, use Eager Loading em todas as querys de listagens, e utiliza simplePaginate.
+
+
+### 4. Testes automatizados 
+
+<img width="383" height="104" alt="image" src="https://github.com/user-attachments/assets/ce3455b8-09db-4b8f-85e2-d254ec8d3ce0" />
+
+Eu criei diversos testes, todos os testes obrigatórios, além de outros que eu achei necessário, acredito que os testes estão cobrindo uma parte consideravel do código.
+
+### 5. Melhorias de performance e segurança
+
+Também fiz algumas melhorias de performance no frontend e no ambiente de execução com Sail.
+
+No frontend, removi o uso do Tailwind via CDN e passei a carregar os assets com Vite usando app.js. Antes, algumas telas carregavam o Tailwind diretamente pelo navegador e definiam configurações de tema dentro da própria view. Com a mudança, o CSS passa a ser processado no build da aplicação, assim o Tailwind gera apenas as classes utilizadas nas views e nos arquivos js. Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. assim, chamadas para API, carregamento de páginas e assets não fica tão facilmente bloqueados por uma única requisição em andamento.
+Essa melhoria é voltada ao ambiente local Em produção, o correto seria usar outras estrategias. Alem disso eu criei duas middleware, uma para rotas de api, porém ela não protege a rota de mock da Bureau e para rotas web. São middleware bem simples, a de API adiciona headers como X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy e Cache-Control. A intenção foi reduzir riscos comuns, como MIME sniffing, carregamento da aplicação em iframe, exposição de informações por referrer e uso indevido de permissões do navegador. A de adiciona os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API. Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e segurança conforme o tipo de resposta.
+
+
