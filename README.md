@@ -46,13 +46,13 @@ Também extraí os valores fixos de negócio para constantes dentro das própria
 
 ### 3. Tela de Simulação e Contratação
 
-Na tela de simulação, implementei a integração do frontend com o fluxo real de contratação, adicionei o JavaScript responsável por chamar o endpoint POST /api/analise-credito/{creditAnalysis}/contratar, controlar o estado de carregamento, exibir mensagens de erro e apresentar uma confirmação quando a contratação é solicitada com sucesso. também implementei a integração do botão de contratação com o fluxo real da aplicação.
+Na tela de simulação, implementei a integração do frontend com o fluxo real de contratação. Adicionei o JavaScript responsável por chamar o endpoint POST /api/analise-credito/{creditAnalysis}/contratar, controlar o estado de carregamento, exibir mensagens de erro e apresentar uma confirmação quando a contratação é solicitada com sucesso.
 
 Na tela de simulação eu não criei nenhum service, só o SimulationController, já que ele só faz validação simples e chama uma view. Essa validação verifica se a análise pode ser exibida usando o método canBeViewedInSimulation() do enum AnalysisStatus. Essa regra permite visualizar apenas análises com status aprovado, processando_contratacao ou contratado, redirecionando análises pendentes ou reprovadas para a tela inicial.
 
 No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
 
-Crie a listagem de contratações, porque acho que é bom o uuário ver quais análises estão em processando contratacao e contratado. A query filtra apenas os status relevantes, e carrega o relacionamento com cliente usando Eager Loading with('customer') para evitar n+1 query, use Eager Loading em todas as querys de listagens, e utiliza simplePaginate.
+Criei a listagem de contratações para permitir que o usuário acompanhe quais análises estão em processando_contratacao e contratado. A consulta filtra apenas os status relevantes e carrega o relacionamento com o cliente usando eager loading com `with('customer')`, evitando o problema de N+1 consultas. Também utilizo eager loading nas consultas das listagens e `simplePaginate` para a paginação.
 
 
 ### 4. Testes automatizados 
@@ -81,11 +81,10 @@ Também fiz algumas melhorias de performance no frontend e no ambiente de execu�
 
 No frontend, removi o uso do Tailwind via CDN e passei a carregar os assets com Vite usando app.js. Antes, algumas telas carregavam o Tailwind diretamente pelo navegador e definiam configurações de tema dentro da própria view. Com a mudança, o CSS passa a ser processado no build da aplicação, assim o Tailwind gera apenas as classes utilizadas nas views e nos arquivos js. 
 
-Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. Assim, chamadas para API, carregamento de páginas e assets não ficam tão facilmente bloqueados por uma única requisição em andamento. Essa melhoria é voltada ao ambiente local. Em produção, o correto seria usar outras estratégias. Além disso, eu criei duas middlewares, uma para rotas de API, porém ela não protege a rota de mock da Bureau, e outra para rotas web. 
+Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. Assim, chamadas para API, carregamento de páginas e assets não ficam tão facilmente bloqueados por uma única requisição em andamento. Essa melhoria é voltada ao ambiente local. Em produção, o correto seria usar outras estratégias. Além disso, criei dois middlewares: um para as rotas de API, que não protege a rota de mock do Bureau, e outro para as rotas web.
 
 São middleware bem simples; a de API adiciona headers como X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy e Cache-Control. A intenção foi reduzir riscos comuns, como MIME sniffing, carregamento da aplicação em iframe, exposição de informações por referrer e uso indevido de permissões do navegador. 
 
 A de adicionar os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API.  Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e
 segurança conforme o tipo de resposta.
-
 
