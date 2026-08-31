@@ -65,7 +65,7 @@
                                     {{ $contract->status === \App\Enums\AnalysisStatus::CONTRACTED ? 'Contratado' : 'Processando' }}
                                 </span>
                             </td>
-                            <td class="px-5 py-4 text-slate-400">{{ $contract->updated_at->format('d/m/Y H:i') }}</td>
+                            <td class="px-5 py-4 text-slate-400">{{ $contract->updated_at->timezone(config('app.display_timezone'))->format('d/m/Y H:i') }}</td>
                             <td class="px-5 py-4 text-right">
                                 <a href="{{ url('/simulacao/' . $contract->hashids_code) }}" class="inline-flex h-9 items-center justify-center whitespace-nowrap rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3 text-xs font-semibold text-emerald-400 transition hover:bg-emerald-500/20 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-darkBg">
                                     Ver detalhes
