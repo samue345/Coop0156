@@ -88,7 +88,7 @@ readonly class CreditAnalysisService
             return null;
         }
 
-        $analysis->refresh();
+        $analysis->status = AnalysisStatus::PROCESSING_CONTRACT;
 
         ProcessContractingJob::dispatch($analysis);
 

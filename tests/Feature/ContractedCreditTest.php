@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\AnalysisStatus;
 use App\Models\CreditAnalysis;
 use App\Models\Customer;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -28,6 +29,7 @@ class ContractedCreditTest extends TestCase
         $contracted = CreditAnalysis::factory()->create([
             'cliente_id' => $contractedCustomer->id,
             'status' => AnalysisStatus::CONTRACTED,
+            'updated_at' => CarbonImmutable::create(2026, 8, 31, 15, 30, 0, 'UTC'),
         ]);
 
         $this->get('/contratacoes')
@@ -38,7 +40,8 @@ class ContractedCreditTest extends TestCase
             ->assertSee('Processando')
             ->assertSee($contracted->hashids_code)
             ->assertSee('Cliente Contratado')
-            ->assertSee('Contratado');
+            ->assertSee('Contratado')
+            ->assertSee('31/08/2026 12:30');
     }
 
     public function test_it_does_not_list_analyses_that_are_not_contracts(): void
