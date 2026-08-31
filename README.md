@@ -8,6 +8,8 @@ Então se a migration já rodou rode o comando:
 
 Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
 
+No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
+
 ## O que foi implementado
 Eu implementei tudo o que estava no readme, todos os obrigatórios e diferenciais. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios. Na tela de simulação e contratação, fiz todos os itens obrigatórios, criei diversos testes, tanto os obrigatórios quanto uma quantidade considerável de não obrigatórios, fiz melhorias no front-end, como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
 
@@ -47,8 +49,6 @@ Na tela de simulação eu não criei nenhum service, só o SimulationController,
 
 No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
 
-Por esse motivo, acredito que 202 Accepted no endpoint de contratação faz mais sentido que 200 OK. Como a requisição apenas aceita a solicitação e inicia um processamento assíncrono, ela não deve afirmar que a contratação já foi concluída naquele instante. O 202 Accepted representa melhor esse comportamento: a solicitação foi recebida e será processada. Isso deixa o contrato da API mais fiel ao funcionamento real do sistema.
-
 Crie a listagem de contratações, porque acho que é bom o uuário ver quais análises estão em processando contratacao e contratado. A query filtra apenas os status relevantes, e carrega o relacionamento com cliente usando Eager Loading with('customer') para evitar n+1 query, use Eager Loading em todas as querys de listagens, e utiliza simplePaginate.
 
 
@@ -76,8 +76,13 @@ Por fim, adicionei testes de disponibilidade da API como smoke tests. Eles não 
 
 Também fiz algumas melhorias de performance no frontend e no ambiente de execução com Sail.
 
-No frontend, removi o uso do Tailwind via CDN e passei a carregar os assets com Vite usando app.js. Antes, algumas telas carregavam o Tailwind diretamente pelo navegador e definiam configurações de tema dentro da própria view. Com a mudança, o CSS passa a ser processado no build da aplicação, assim o Tailwind gera apenas as classes utilizadas nas views e nos arquivos js. Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. Assim, chamadas para API, carregamento de páginas e assets não ficam tão facilmente bloqueados por uma única requisição em andamento.
+No frontend, removi o uso do Tailwind via CDN e passei a carregar os assets com Vite usando app.js. Antes, algumas telas carregavam o Tailwind diretamente pelo navegador e definiam configurações de tema dentro da própria view. Com a mudança, o CSS passa a ser processado no build da aplicação, assim o Tailwind gera apenas as classes utilizadas nas views e nos arquivos js. 
 
-Essa melhoria é voltada ao ambiente local. Em produção, o correto seria usar outras estratégias. Além disso, eu criei duas middlewares, uma para rotas de API, porém ela não protege a rota de mock da Bureau, e outra para rotas web. São middleware bem simples; a de API adiciona headers como X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy e Cache-Control. A intenção foi reduzir riscos comuns, como MIME sniffing, carregamento da aplicação em iframe, exposição de informações por referrer e uso indevido de permissões do navegador. A de adicionar os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API. Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e segurança conforme o tipo de resposta.
+Também defini o PHP_CLI_SERVER_WORKERS em 4 nas configurações do Sail em docker/sail-start.sh. Assim, chamadas para API, carregamento de páginas e assets não ficam tão facilmente bloqueados por uma única requisição em andamento. Essa melhoria é voltada ao ambiente local. Em produção, o correto seria usar outras estratégias. Além disso, eu criei duas middlewares, uma para rotas de API, porém ela não protege a rota de mock da Bureau, e outra para rotas web. 
+
+São middleware bem simples; a de API adiciona headers como X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy e Cache-Control. A intenção foi reduzir riscos comuns, como MIME sniffing, carregamento da aplicação em iframe, exposição de informações por referrer e uso indevido de permissões do navegador. 
+
+A de adicionar os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API.  Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e
+segurança conforme o tipo de resposta.
 
 
