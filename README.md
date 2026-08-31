@@ -10,7 +10,7 @@ Pensando nisso, eu alterei a migration, deixando o email nullable. Entretanto, n
 Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
 
 ## O que foi implementado
-Eu implementei tudo o que estava no readme, todos os obrigatórios e diferenciais. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios. Na tela de simulação e contratação, fiz todos os itens obrigatórios, criei diversos testes, tanto os obrigatórios quanto uma quantidade considerável de não obrigatórios, fiz melhorias no front-end, como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
+Eu implementei tudo o que estava no readme, todos os requisitos obrigatórios e diferenciais foram feitos. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios. Na tela de simulação e contratação, fiz todos os itens obrigatórios, criei diversos testes, tanto os obrigatórios quanto uma quantidade considerável de não obrigatórios, fiz melhorias no front-end, como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
 
 Abaixo eu explico com mais detalhes algumas implementações e explico os motivos pelos quais eu implementei dessa forma. 
 
