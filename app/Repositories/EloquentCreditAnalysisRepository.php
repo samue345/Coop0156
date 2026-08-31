@@ -32,4 +32,12 @@ class EloquentCreditAnalysisRepository implements CreditAnalysisRepositoryInterf
 
         return $analysis->refresh();
     }
+
+    public function transitionToProcessingContract(CreditAnalysis $analysis): bool
+    {
+        return CreditAnalysis::query()
+            ->whereKey($analysis->getKey())
+            ->where('status', AnalysisStatus::APPROVED->value)
+            ->update(['status' => AnalysisStatus::PROCESSING_CONTRACT->value]) === 1;
+    }
 }

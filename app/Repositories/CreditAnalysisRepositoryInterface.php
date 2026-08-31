@@ -12,4 +12,6 @@ interface CreditAnalysisRepositoryInterface
     public function create(array $data): CreditAnalysis;
 
     public function update(CreditAnalysis $analysis, array $data): CreditAnalysis;
+
+    public function transitionToProcessingContract(CreditAnalysis $analysis): bool;
 }

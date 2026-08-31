@@ -42,8 +42,7 @@ class CreditAnalysisController extends Controller
      */
     public function contract(CreditAnalysis $creditAnalysis): JsonResponse
     {
-        if ($creditAnalysis->status !== AnalysisStatus::APPROVED)
-        {
+        if (!$creditAnalysis->status->canBeContracted()) {
             return response()->json([
                 'message' => 'A análise precisa estar aprovada para ser contratada.',
                 'status' => $creditAnalysis->status?->value,
@@ -51,6 +50,12 @@ class CreditAnalysisController extends Controller
         }
 
         $creditAnalysis = $this->analyses->startContracting($creditAnalysis);
+
+        if (!$creditAnalysis) {
+            return response()->json([
+                'message' => 'A análise não está mais disponível para contratação.',
+            ], 409);
+        }
 
         return response()->json([
             'message' => 'Contratação solicitada com sucesso. Acompanhe o status em Contratações.',

@@ -10,6 +10,11 @@ enum AnalysisStatus: string
     case PROCESSING_CONTRACT = 'processando_contratacao';
     case CONTRACTED = 'contratado';
 
+    public function canBeContracted(): bool
+    {
+        return $this === self::APPROVED;
+    }
+
     public function canBeViewedInSimulation(): bool
     {
         return in_array($this, [

@@ -68,11 +68,13 @@ readonly class CreditAnalysisService
         return $this->analyses->update($analysis, ['score' => $score, ...$result]);
     }
 
-    public function startContracting(CreditAnalysis $analysis): CreditAnalysis
+    public function startContracting(CreditAnalysis $analysis): ?CreditAnalysis
     {
-        $analysis = $this->analyses->update($analysis, [
-            'status' => AnalysisStatus::PROCESSING_CONTRACT,
-        ]);
+        if (!$this->analyses->transitionToProcessingContract($analysis)) {
+            return null;
+        }
+
+        $analysis->refresh();
 
         ProcessContractingJob::dispatch($analysis);
 
