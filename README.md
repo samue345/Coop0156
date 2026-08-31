@@ -1,14 +1,13 @@
 # Sistema de Análise de Crédito Cooperativo (Coop0156)
 
 ## Algumas Considerações
-No fluxo de criação de análise de crédito, um novo cliente deve ser criado caso ele não exista. Ele deve ser criado com os dados recebidos do formulário, que são nome, CPF e renda mensal como requisito. A questão é que, na migração de clientes, o email é not null. Pensando nisso, eu alterei a migration, deixando o email nullable. Entretanto, no CRUD de clientes, o email é obrigatório, então eu resolvi isso a nível de código, ou seja, no banco é nullable para manter os requisitos do fluxo de análise de crédito, porém eu deixo o email como obrigatório no CRUD de clientes.
-Então se a migration já rodou rode o comando:
+No fluxo de criação de análise de crédito, um novo cliente deve ser criado caso ele não exista. Ele deve ser criado com os dados recebidos do formulário, que são nome, CPF e renda mensal como requisito. A questão é que, na migração de clientes, o email é not null. 
+
+Pensando nisso, eu alterei a migration, deixando o email nullable. Entretanto, no CRUD de clientes, o email é obrigatório, então eu resolvi isso a nível de código, ou seja, no banco é nullable para manter os requisitos do fluxo de análise de crédito, porém eu deixo o email como obrigatório no CRUD de clientes.Então se a migration já rodou rode o comando:
 
 ```./vendor/bin/sail artisan migrate:fresh```
 
 Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
-
-No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
 
 ## O que foi implementado
 Eu implementei tudo o que estava no readme, todos os obrigatórios e diferenciais. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios. Na tela de simulação e contratação, fiz todos os itens obrigatórios, criei diversos testes, tanto os obrigatórios quanto uma quantidade considerável de não obrigatórios, fiz melhorias no front-end, como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
@@ -21,14 +20,18 @@ Eu criei os métodos de CRUD utilizando uma camada de Controller, Service e uma 
 Eu criei todas as validações com form request (Uma alternativa interessante para o form request seria um pacote do spatie chamado Laravel data, porque é possível fazer as validações que o form request faz e além disso ele é um DTO, dessa forma eu consigo tipar os atributos, e fazer formatações) 
 na criação de cliente, como a de nome obrigatório, email obrigatório, formato válido e único, renda mensal sendo obrigatório com número positivo, na válidação de CPF achei válido criar uma Rule "ValidCPF" porque eu faço a validação de CPF na criação e edição de cliente e também na criação de análise de crédito, e Além de validar se o CPF é obrigatório, possui 11 dígitos e é único, também verifico se ele é um CPF válido. 
 
-Foram criadas as rotas de detalhe do cliente, responsável por retornar os dados de um cliente específico. Como a rota utiliza route model binding com suporte a Hashids, o parâmetro recebido é resolvido automaticamente para o model correspondente. Quando o código informado não representa um cliente válido ou existente, a aplicação retorna 404. Também implementei a rota de atualização, mantendo as validações com FormRequest e tratando a unicidade de CPF e e-mail sem considerar o próprio registro editado. Por fim, criei a rota de remoção, que exclui o cliente informado e retorna 204 No Content quando a operação é concluída com sucesso.
+Foram criadas as rotas de detalhe do cliente, responsável por retornar os dados de um cliente específico. Como a rota utiliza route model binding com suporte a Hashids, o parâmetro recebido é resolvido automaticamente para o model correspondente. Quando o código informado não representa um cliente válido ou existente, a aplicação retorna 404.
+
+Também implementei a rota de atualização, mantendo as validações com FormRequest e tratando a unicidade de CPF e e-mail sem considerar o próprio registro editado. Por fim, criei a rota de remoção, que exclui o cliente informado e retorna 204 No Content quando a operação é concluída com sucesso.
 
 Eu criei o front end da tela de cadastro de cliente, O formulário é validado no front-end para evitar requests denecessárias para o servidor e criei uma listagem paginada de clientes utilizando simplePaginate, pois ele não executa uma consulta adicional de COUNT(*) para calcular o total de registros, tendo melhor performance que o paginate. Também utilizei CustomerResource para padronizar o formato das respostas da API. As respostas expõem um código público do cliente via Hashids, evitando depender diretamente do id incremental do banco nas interações externas.
 
 
 ### 2. Integração com o Bureau e Regras de Negócio
 
-implementei a integração com o Bureau de Crédito por meio de um client específico, o CreditBureauClient, responsável por consultar o score do cliente a partir do CPF. Para reduzir o acoplamento, a aplicação depende da interface CreditScoreProvider, e não diretamente da implementação concreta. Com isso, os services dependem apenas de um contrato, enquanto detalhes como HTTP, URL, timeout, tratamento de erro e formato da resposta ficam isolados na camada de integração. Essa decisão facilita manutenção e permite trocar futuramente o provedor de score criando uma nova implementação da mesma interface. Também apliquei rate limit na rota de solicitação de análise de crédito. Em routes/api.php, a rota POST /api/analise-credito usa o middleware throttle:credit-analysis, e o limite é configurado no AppServiceProvider com 
+implementei a integração com o Bureau de Crédito por meio de um client específico, o CreditBureauClient, responsável por consultar o score do cliente a partir do CPF. Para reduzir o acoplamento, a aplicação depende da interface CreditScoreProvider, e não diretamente da implementação concreta. Com isso, os services dependem apenas de um contrato, enquanto detalhes como HTTP, URL, timeout, tratamento de erro e formato da resposta ficam isolados na camada de integração. Essa decisão facilita manutenção e permite trocar futuramente o provedor de score criando uma nova implementação da mesma interface. 
+
+Além disso apliquei rate limit na rota de solicitação de análise de crédito. Em routes/api.php, a rota POST /api/analise-credito usa o middleware throttle:credit-analysis, e o limite é configurado no AppServiceProvider com 
 
 ```Limit::perMinute(10)->by($request->ip()).```
 
