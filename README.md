@@ -1,4 +1,4 @@
-# Sistema de Análise de Crédito Cooperativo (Coop0156)
+# Sistema de Análise de Crédito Cooperativo
 
 ## Algumas Considerações
 No fluxo de criação de análise de crédito, um novo cliente deve ser criado caso ele não exista. Ele deve ser criado com os dados recebidos do formulário, que são nome, CPF e renda mensal como requisito. A questão é que, na migração de clientes, o email é not null. 
