@@ -50,7 +50,7 @@ Na tela de simulação, implementei a integração do frontend com o fluxo real 
 
 Na tela de simulação eu não criei nenhum service, só o SimulationController, já que ele só faz validação simples e chama uma view. Essa validação verifica se a análise pode ser exibida usando o método canBeViewedInSimulation() do enum AnalysisStatus. Essa regra permite visualizar apenas análises com status aprovado, processando_contratacao ou contratado, redirecionando análises pendentes ou reprovadas para a tela inicial.
 
-No backend, a contratação é iniciada pelo método startContracting() do CreditAnalysisService. Antes de iniciar o processo, o CreditAnalysisController valida se a análise está com status aprovado; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service altera o status para processando_contratacao e despacha o job ProcessContractingJob, que finaliza o fluxo atualizando a análise para contratado.
+No backend, a contratação é iniciada pelo método `startContracting()` do `CreditAnalysisService`. Antes de iniciar o processo, o `CreditAnalysisController` valida se a análise está com status `aprovado`; caso contrário, retorna erro informando que a análise precisa estar aprovada para ser contratada. Quando a contratação é aceita, o service faz uma transição atômica e condicional do status para `processando_contratacao`, garantindo que apenas uma requisição consiga iniciar a contratação. Em seguida, despacha o job `ProcessContractingJob`, que finaliza o fluxo atualizando a análise para `contratado`. Caso a análise deixe de estar disponível durante essa operação, a API retorna `409 Conflict` e não despacha um novo job.
 
 Criei a listagem de contratações para permitir que o usuário acompanhe quais análises estão em processando_contratacao e contratado. A consulta filtra apenas os status relevantes e carrega o relacionamento com o cliente usando eager loading com `with('customer')`, evitando o problema de N+1 consultas. Também utilizo eager loading nas consultas das listagens e `simplePaginate` para a paginação.
 
@@ -87,4 +87,3 @@ São middleware bem simples; a de API adiciona headers como X-Content-Type-Optio
 
 A de adicionar os principais headers de segurança nas respostas HTML, mas sem o Cache-Control: no-store, que foi mantido apenas na API.  Essa separação evita tratar páginas web e respostas de API exatamente da mesma forma, permitindo ajustar a política de cache e
 segurança conforme o tipo de resposta.
-
