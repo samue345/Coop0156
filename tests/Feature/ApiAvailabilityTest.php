@@ -10,6 +10,9 @@ class ApiAvailabilityTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string HIGH_SCORE_BUREAU_CPF = '10000000523';
+    private const int HIGH_BUREAU_SCORE = 850;
+
     public function test_customer_listing_api_is_available(): void
     {
         Customer::factory()->create();
@@ -45,9 +48,9 @@ class ApiAvailabilityTest extends TestCase
 
     public function test_mock_bureau_api_is_available(): void
     {
-        $this->getJson('/api/mock/bureau/10000000523')
+        $this->getJson('/api/mock/bureau/'.self::HIGH_SCORE_BUREAU_CPF)
             ->assertOk()
-            ->assertJsonPath('cpf', '10000000523')
-            ->assertJsonPath('score', 850);
+            ->assertJsonPath('cpf', self::HIGH_SCORE_BUREAU_CPF)
+            ->assertJsonPath('score', self::HIGH_BUREAU_SCORE);
     }
 }

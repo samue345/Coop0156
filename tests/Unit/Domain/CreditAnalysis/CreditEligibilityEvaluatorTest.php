@@ -33,6 +33,9 @@ class CreditEligibilityEvaluatorTest extends TestCase
     private const float MEDIUM_SCORE_MONTHLY_RATE = 4.5;
     private const float HIGH_SCORE_MONTHLY_RATE = 2.9;
     private const float STANDARD_HIGH_SCORE_INSTALLMENT = 1123.33;
+    private const string MINIMUM_INCOME_REJECTION_REASON = 'Renda mínima insuficiente';
+    private const string LOW_SCORE_REJECTION_REASON = 'Score de crédito muito baixo';
+    private const string INCOME_COMMITMENT_REJECTION_REASON = 'Comprometimento de renda superior a 30%';
 
     #[DataProvider('minimumIncomeCases')]
     public function test_it_rejects_only_income_below_the_minimum(float $income, AnalysisStatus $expectedStatus): void
@@ -45,7 +48,7 @@ class CreditEligibilityEvaluatorTest extends TestCase
 
         $this->assertSame($expectedStatus, $decision->status);
         $this->assertSame(
-            $expectedStatus === AnalysisStatus::REJECTED ? 'Renda mínima insuficiente' : null,
+            $expectedStatus === AnalysisStatus::REJECTED ? self::MINIMUM_INCOME_REJECTION_REASON : null,
             $decision->rejectionReason,
         );
     }
@@ -73,7 +76,7 @@ class CreditEligibilityEvaluatorTest extends TestCase
         $this->assertSame($expectedStatus, $decision->status);
         $this->assertSame($expectedRate, $decision->interestRate);
         $this->assertSame(
-            $expectedStatus === AnalysisStatus::REJECTED ? 'Score de crédito muito baixo' : null,
+            $expectedStatus === AnalysisStatus::REJECTED ? self::LOW_SCORE_REJECTION_REASON : null,
             $decision->rejectionReason,
         );
     }
@@ -130,7 +133,7 @@ class CreditEligibilityEvaluatorTest extends TestCase
 
         $this->assertSame($expectedStatus, $decision->status);
         $this->assertSame(
-            $expectedStatus === AnalysisStatus::REJECTED ? 'Comprometimento de renda superior a 30%' : null,
+            $expectedStatus === AnalysisStatus::REJECTED ? self::INCOME_COMMITMENT_REJECTION_REASON : null,
             $decision->rejectionReason,
         );
     }

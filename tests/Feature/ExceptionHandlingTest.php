@@ -6,6 +6,7 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use PDOException;
+use Symfony\Component\HttpFoundation\Response;
 use Tests\TestCase;
 
 class ExceptionHandlingTest extends TestCase
@@ -24,7 +25,7 @@ class ExceptionHandlingTest extends TestCase
         });
 
         $this->getJson('/api/test-query-exception')
-            ->assertStatus(500)
+            ->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR)
             ->assertJson([
                 'message' => 'Não foi possível processar a solicitação. Tente novamente mais tarde.',
             ])
