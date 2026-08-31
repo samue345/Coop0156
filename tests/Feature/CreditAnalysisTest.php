@@ -400,7 +400,7 @@ class CreditAnalysisTest extends TestCase
             ]);
 
             $this->postJson("/api/analise-credito/{$analysis->id}/contratar")
-                ->assertUnprocessable()
+                ->assertConflict()
                 ->assertJson([
                     'message' => 'A análise precisa estar aprovada para ser contratada.',
                     'status' => $status->value,

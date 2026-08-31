@@ -9,6 +9,7 @@ use App\Http\Resources\CreditAnalysisResource;
 use App\Models\CreditAnalysis;
 use App\Services\CreditAnalysisService;
 use Illuminate\Http\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class CreditAnalysisController extends Controller
 {
@@ -46,7 +47,7 @@ class CreditAnalysisController extends Controller
             return response()->json([
                 'message' => 'A análise precisa estar aprovada para ser contratada.',
                 'status' => $creditAnalysis->status?->value,
-            ], 422);
+            ], Response::HTTP_CONFLICT);
         }
 
         $creditAnalysis = $this->analyses->startContracting($creditAnalysis);
@@ -54,12 +55,12 @@ class CreditAnalysisController extends Controller
         if (!$creditAnalysis) {
             return response()->json([
                 'message' => 'A análise não está mais disponível para contratação.',
-            ], 409);
+            ], Response::HTTP_CONFLICT);
         }
 
         return response()->json([
             'message' => 'Contratação solicitada com sucesso. Acompanhe o status em Contratações.',
             'status' => $creditAnalysis->status->value,
-        ], 202);
+        ], Response::HTTP_ACCEPTED);
     }
 }
