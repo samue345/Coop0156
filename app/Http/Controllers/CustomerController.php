@@ -20,7 +20,7 @@ class CustomerController extends Controller
 
     public function index(): AnonymousResourceCollection
     {
-        return CustomerResource::collection($this->customers->list());
+        return CustomerResource::collection($this->customers->paginate());
     }
 
     public function store(StoreCustomerRequest $request): JsonResponse

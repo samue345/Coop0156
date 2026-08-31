@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Customer;
+use App\Support\Pagination;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -24,7 +25,6 @@ class CustomerTest extends TestCase
     private const string PARTIAL_UPDATE_PHONE = '11988887777';
     private const int MISSING_CUSTOMER_ID = 999999;
     private const int CUSTOMERS_TO_SPAN_TWO_PAGES = 16;
-    private const int CUSTOMER_LIST_PER_PAGE = 15;
     private const int FIRST_PAGE = 1;
     private const int SECOND_PAGE = 2;
     private const int CUSTOMERS_ON_SECOND_PAGE = 1;
@@ -121,15 +121,15 @@ class CustomerTest extends TestCase
 
         $this->getJson('/api/clientes')
             ->assertOk()
-            ->assertJsonCount(self::CUSTOMER_LIST_PER_PAGE, 'data')
+            ->assertJsonCount(Pagination::CUSTOMERS_PER_PAGE, 'data')
             ->assertJsonPath('meta.current_page', self::FIRST_PAGE)
-            ->assertJsonPath('meta.per_page', self::CUSTOMER_LIST_PER_PAGE);
+            ->assertJsonPath('meta.per_page', Pagination::CUSTOMERS_PER_PAGE);
 
         $this->getJson('/api/clientes?page='.self::SECOND_PAGE)
             ->assertOk()
             ->assertJsonCount(self::CUSTOMERS_ON_SECOND_PAGE, 'data')
             ->assertJsonPath('meta.current_page', self::SECOND_PAGE)
-            ->assertJsonPath('meta.per_page', self::CUSTOMER_LIST_PER_PAGE);
+            ->assertJsonPath('meta.per_page', Pagination::CUSTOMERS_PER_PAGE);
     }
 
     public function test_it_shows_an_existing_customer_by_id(): void

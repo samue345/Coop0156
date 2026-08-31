@@ -3,15 +3,16 @@
 namespace App\Repositories;
 
 use App\Models\Customer;
+use App\Support\Pagination;
 use Illuminate\Contracts\Pagination\Paginator;
 
 class EloquentCustomerRepository implements CustomerRepositoryInterface
 {
-    public function paginate(int $perPage = 15): Paginator
+    public function paginate(): Paginator
     {
         return Customer::query()
             ->latest('id')
-            ->simplePaginate($perPage);
+            ->simplePaginate(Pagination::CUSTOMERS_PER_PAGE);
     }
 
     public function firstOrCreateByCpf(string $cpf, array $data): Customer

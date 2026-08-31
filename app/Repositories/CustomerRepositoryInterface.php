@@ -7,7 +7,7 @@ use Illuminate\Contracts\Pagination\Paginator;
 
 interface CustomerRepositoryInterface
 {
-    public function paginate(int $perPage = 15): Paginator;
+    public function paginate(): Paginator;
 
     public function firstOrCreateByCpf(string $cpf, array $data): Customer;
 

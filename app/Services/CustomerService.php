@@ -13,9 +13,9 @@ class CustomerService
     ) {
     }
 
-    public function list(int $perPage = 15): Paginator
+    public function paginate(): Paginator
     {
-        return $this->customers->paginate($perPage);
+        return $this->customers->paginate();
     }
 
     /**

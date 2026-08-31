@@ -7,7 +7,7 @@ use Illuminate\Contracts\Pagination\Paginator;
 
 interface CreditAnalysisRepositoryInterface
 {
-    public function paginateContracts(int $perPage = 15): Paginator;
+    public function paginateContracts(): Paginator;
 
     public function create(array $data): CreditAnalysis;
 

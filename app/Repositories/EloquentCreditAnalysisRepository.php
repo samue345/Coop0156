@@ -4,11 +4,12 @@ namespace App\Repositories;
 
 use App\Enums\AnalysisStatus;
 use App\Models\CreditAnalysis;
+use App\Support\Pagination;
 use Illuminate\Contracts\Pagination\Paginator;
 
 class EloquentCreditAnalysisRepository implements CreditAnalysisRepositoryInterface
 {
-    public function paginateContracts(int $perPage = 15): Paginator
+    public function paginateContracts(): Paginator
     {
         return CreditAnalysis::query()
             ->with('customer')
@@ -17,7 +18,7 @@ class EloquentCreditAnalysisRepository implements CreditAnalysisRepositoryInterf
                 AnalysisStatus::CONTRACTED->value,
             ])
             ->latest('updated_at')
-            ->simplePaginate($perPage);
+            ->simplePaginate(Pagination::CONTRACTS_PER_PAGE);
     }
 
     public function create(array $data): CreditAnalysis
