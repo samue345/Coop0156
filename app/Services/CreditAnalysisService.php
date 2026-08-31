@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Contracts\CreditScoreProvider;
 use App\Domain\CreditAnalysis\CreditContext;
 use App\Domain\CreditAnalysis\CreditEligibilityEvaluator;
+use App\Domain\CreditDecision;
 use App\Enums\AnalysisStatus;
 use App\Jobs\ProcessContractingJob;
 use App\Models\CreditAnalysis;
@@ -37,7 +38,7 @@ readonly class CreditAnalysisService
             $score,
         ));
 
-        return $this->completeAnalysis($analysis, $score, $decision->toArray());
+        return $this->completeAnalysis($analysis, $score, $this->decisionData($decision));
     }
 
     private function createPendingAnalysis(array $data): CreditAnalysis
@@ -66,6 +67,19 @@ readonly class CreditAnalysisService
     private function completeAnalysis(CreditAnalysis $analysis, int $score, array $result): CreditAnalysis
     {
         return $this->analyses->update($analysis, ['score' => $score, ...$result]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decisionData(CreditDecision $decision): array
+    {
+        return [
+            'status' => $decision->status,
+            'taxa_juros' => $decision->interestRate,
+            'valor_parcela' => $decision->installment,
+            'motivo_rejeicao' => $decision->rejectionReason,
+        ];
     }
 
     public function startContracting(CreditAnalysis $analysis): ?CreditAnalysis

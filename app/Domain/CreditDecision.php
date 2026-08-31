@@ -34,16 +34,4 @@ final readonly class CreditDecision
         );
     }
 
-    /**
-     * @return array<string, mixed>
-     */
-    public function toArray(): array
-    {
-        return [
-            'status' => $this->status,
-            'taxa_juros' => $this->interestRate,
-            'valor_parcela' => $this->installment,
-            'motivo_rejeicao' => $this->rejectionReason,
-        ];
-    }
 }
