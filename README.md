@@ -10,7 +10,17 @@ Pensando nisso, eu alterei a migration, deixando o email nullable. Entretanto, n
 Além disso, Para não expor o ids no front-end eu usei um package do laravel chamado Hashids, que basicamente cria um hash do id, isso evita que ids fiquem expostos. Então o simulation/{id} vira simulation/{code}.  
 
 ## O que foi implementado
-Eu implementei tudo o que estava no readme, todos os requisitos obrigatórios e diferenciais foram feitos. Fiz o CRUD completo de cliente com todas as validações, criei a tela de cadastro de clientes, criei a integração com o Bureau e implementei as regras de negócios. Na tela de simulação e contratação, fiz todos os itens obrigatórios, criei diversos testes, tanto os obrigatórios quanto uma quantidade considerável de não obrigatórios, fiz melhorias no front-end, como validações de formulário e refatoração, criei uma tela de listagens de contratações, implementei o ProcessContractingJob e fiz algumas melhorias de performance.
+Implementei todos os requisitos obrigatórios e diferenciais descritos no README, incluindo:
+
+* CRUD completo de clientes, com todas as validações necessárias;
+* Tela de cadastro de clientes;
+* Integração com o Bureau e implementação das respectivas regras de negócio;
+* Implementação de todos os requisitos obrigatórios da tela de simulação e contratação;
+* Criação de diversos testes automatizados, contemplando tanto os cenários obrigatórios quanto uma quantidade considerável de cenários adicionais;
+* Melhorias no front-end, incluindo validações de formulário e refatorações;
+* Criação da tela de listagem de contratações;
+* Implementação do `ProcessContractingJob`;
+* Melhorias de performance e otimizações gerais na aplicação.
 
 Abaixo eu explico com mais detalhes algumas implementações e explico os motivos pelos quais eu implementei dessa forma. 
 
@@ -52,9 +62,9 @@ Na tela de simulação, implementei a integração do frontend com o fluxo real 
 
 Na tela de simulação eu não criei nenhum service, só o SimulationController, já que ele só faz validação simples e chama uma view. Essa validação verifica se a análise pode ser exibida usando o método canBeViewedInSimulation() do enum AnalysisStatus. Essa regra permite visualizar apenas análises com status aprovado, processando_contratacao ou contratado, redirecionando análises pendentes ou reprovadas para a tela inicial.
 
-No backend, a contratação é iniciada pelo método `startContracting()` do `CreditAnalysisService`. Antes de iniciar o processo, o `CreditAnalysisController` valida se a análise está com status `aprovado`; caso contrário, retorna `409 Conflict`, informando que a análise precisa estar aprovada para ser contratada. Na parte de update pensei que emn alguns casos pode ocorrer race condition, então quando a contratação é aceita, o service faz uma transição atômica, e condicional do status para `processando_contratacao`, garantindo que apenas uma requisição consiga iniciar a contratação. Em seguida, despacha o job `ProcessContractingJob`, que finaliza o fluxo atualizando a análise para `contratado`. Caso a análise deixe de estar disponível durante essa operação, a API também retorna `409 Conflict` e não despacha um novo job.
+No backend, a contratação é iniciada pelo método `startContracting()` do `CreditAnalysisService`. Antes de iniciar o processo, o `CreditAnalysisController` valida se a análise está com status `aprovado`; caso contrário, retorna `409 Conflict`, informando que a análise precisa estar aprovada para ser contratada. Na parte de update pensei que em alguns casos podeiram ocorrer race condition, então quando a contratação é aceita, o service faz uma transição atômica, e condicional do status para `processando_contratacao`, garantindo que apenas uma requisição consiga iniciar a contratação. Logo após isso, despacha o job `ProcessContractingJob`, que finaliza o fluxo atualizando a análise para `contratado`. Se a análise não ficar mais disponível durante essa operação, a API também retorna `409 Conflict` e não despacha um novo job.
 
-Criei a listagem de contratações para permitir que o usuário acompanhe quais análises estão em processando_contratacao e contratado. A consulta filtra apenas os status relevantes e carrega o relacionamento com o cliente usando eager loading com `with('customer')`, evitando o problema de N+1 consultas. Também utilizo eager loading nas consultas das listagens e `simplePaginate` para a paginação.
+Criei a listagem de contratações para permitir que o usuário acompanhe quais análises estão em processando_contratacao e contratado. A consulta filtra apenas os status relevantes e carrega. Eu decidi usar eager loading com `with('customer')`, no momento de carregar o relacionamento com o cliente, dessa forma, não ocorre problema de N+1 query. Eu usei eager loading  em todas as querys das listagens.
 
 
 ### 4. Testes automatizados 
