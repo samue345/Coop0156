@@ -58,7 +58,7 @@ Também extraí os valores fixos de negócio para constantes dentro das própria
 
 ### 3. Tela de Simulação e Contratação
 
-Na tela de simulação, implementei a integração do frontend com o fluxo real de contratação. Adicionei o JavaScript responsável por chamar o endpoint POST /api/analise-credito/{creditAnalysis}/contratar, controlar o estado de carregamento, exibir mensagens de erro e apresentar uma confirmação quando a contratação é solicitada com sucesso.
+Na tela de simulação, implementei a integração do frontend com o fluxo real de contratação. Adicionei o JavaScript responsável por chamar o endpoint responsável por criar o contrato, controlar o estado de carregamento, exibir mensagens de erro e apresentar uma confirmação quando a contratação é solicitada com sucesso.
 
 Na tela de simulação eu não criei nenhum service, só o SimulationController, já que ele só faz validação simples e chama uma view. Essa validação verifica se a análise pode ser exibida usando o método canBeViewedInSimulation() do enum AnalysisStatus. Essa regra permite visualizar apenas análises com status aprovado, processando_contratacao ou contratado, redirecionando análises pendentes ou reprovadas para a tela inicial.
 
